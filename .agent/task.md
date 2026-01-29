@@ -1,0 +1,13 @@
+- [x] **项目申报材料撰写 (Project Proposal)** <!-- id: 0 -->
+    - [x] 整理项目背景与意义 (Background & Significance) <!-- id: 1 -->
+    - [x] 细化研究内容：资产化转换引擎 (3DGS focus) <!-- id: 2 -->
+    - [x] 细化研究内容：质量评测体系 (Quality Metrics) <!-- id: 3 -->
+    - [x] 撰写年度考核指标与预期成果 (KPIs & Deliverables) <!-- id: 4 -->
+- [x] **技术方案完善 (Technical Architecture)** <!-- id: 5 -->
+    - [x] 确立 3DGS 核心算法路线 (Algorithm Strategy) <!-- id: 6 -->
+    - [x] 设计质量评测数学模型 (Evaluation Metrics Design) <!-- id: 7 -->
+    - [x] 硬件适配方案 (A6000 Optimization) <!-- id: 8 -->
+- [x] **代码实现路径规划 (Implementation Planning)** <!-- id: 9 -->
+    - [x] 设计代码仓库结构 (Repo Structure) <!-- id: 10 -->
+    - [x] 定义核心模块接口 (Core Modules API) <!-- id: 11 -->
+    - [x] 制定开发里程碑 (Dev Milestones) <!-- id: 12 -->
