@@ -1,0 +1,8 @@
+assets/nerfstudio/poster/images*
+
+# Local outputs
+outputs/
+__pycache__/
+
+# Vendored external repos (kept local)
+modules/sam-3d-objects/
