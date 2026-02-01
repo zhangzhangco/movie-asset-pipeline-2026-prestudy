@@ -1,0 +1,115 @@
+
+[
+  {
+    "description": "CASE 1: 核心 3D 资产 (3D Gaussian Splat)",
+    "system_metadata": {
+      "doi_name": "10.5000.1/CN.FILM.ASSET.2026.0001",
+      "referent_type": "DigitalAsset",
+      "referent_sub_type": "3DModel/GaussianSplat",
+      "referent_name": "Sci-Fi Blaster Rifle (Hero Prop)",
+      "display_form": "https://doi.org/10.5000.1/CN.FILM.ASSET.2026.0001",
+      "referent_identifier": [
+        {
+          "type": "LocalID",
+          "value": "prop_sci_fi_gun_01"
+        },
+        {
+          "type": "ISAN", 
+          "value": "0000-0004-9B3C-0000-T-0000-0000-1" 
+        }
+      ]
+    },
+    "technical_metadata": {
+      "format": "PLY",
+      "file_size": "65MB",
+      "poly_count": "N/A (Gaussian Splats: 1.2M)",
+      "created_via": "Generative AI (TRELLIS + ml-sharp)"
+    }
+  },
+  {
+    "description": "CASE 2: 概念设计图 (该 3D 资产的来源)",
+    "system_metadata": {
+      "doi_name": "10.5000.1/CN.FILM.ASSET.2026.0002",
+      "referent_type": "Creation",
+      "referent_sub_type": "Image/ConceptArt",
+      "referent_name": "Concept Sketch: Sci-Fi Blaster (V3)",
+      "referent_identifier": [
+        {
+          "type": "Relation",
+          "relationship": "IsBasisFor",
+          "value": "10.5000.1/CN.FILM.ASSET.2026.0001"
+        }
+      ]
+    },
+    "technical_metadata": {
+      "format": "EXR (16-bit)",
+      "resolution": "4096x2160",
+      "color_space": "ACEScg"
+    }
+  },
+  {
+    "description": "CASE 3: 场景扫描数据 (点云)",
+    "system_metadata": {
+      "doi_name": "10.5000.1/CN.FILM.ASSET.2026.0003",
+      "referent_type": "DigitalAsset",
+      "referent_sub_type": "3DModel/PointCloud",
+      "referent_name": "Desert Ruins - Sector 7 (Raw Scan)",
+      "referent_identifier": [
+         {
+          "type": "LocalID",
+          "value": "scan_desert_ruins_007"
+        }
+      ]
+    },
+    "technical_metadata": {
+      "format": "E57",
+      "points": "450 Million",
+      "acquisition_method": "LiDAR + Photogrammetry"
+    }
+  },
+  {
+    "description": "CASE 4: 剧本描述 (文本)",
+    "system_metadata": {
+      "doi_name": "10.5000.1/CN.FILM.ASSET.2026.0004",
+      "referent_type": "Creation",
+      "referent_sub_type": "Text/Screenplay",
+      "referent_name": "Scene 45 - The Standoff (Script Excerpt)",
+      "referent_identifier": [
+        {
+          "type": "Relation",
+          "relationship": "Describes",
+          "value": "10.5000.1/CN.FILM.ASSET.2026.0003" 
+        }
+      ]
+    },
+    "technical_metadata": {
+      "format": "PDF",
+      "author": "Screenwriter A"
+    }
+  },
+  {
+    "description": "CASE 5: 物理道具 (实物)",
+    "system_metadata": {
+      "doi_name": "10.5000.1/CN.FILM.ASSET.2026.0005",
+      "referent_type": "PhysicalObject",
+      "referent_sub_type": "Prop/Weapon",
+      "referent_name": "Sci-Fi Blaster (Physical Mockup)",
+      "referent_identifier": [
+        {
+          "type": "RFID",
+          "value": "e200341201321000"
+        },
+        {
+          "type": "Relation",
+          "relationship": "IsReplicaOf",
+          "value": "10.5000.1/CN.FILM.ASSET.2026.0001"
+        }
+      ]
+    },
+    "technical_metadata": {
+      "location": "Warehouse B, Shelf 4",
+      "material": "Resin + 3D Print",
+      "weight": "1.2kg"
+    }
+  }
+]

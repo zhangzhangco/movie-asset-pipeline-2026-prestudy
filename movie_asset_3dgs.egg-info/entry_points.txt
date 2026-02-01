@@ -1,0 +1,2 @@
+[nerfstudio.dataparser_configs]
+cinema = movie_asset_3dgs.data.cinema_dataparser:cinema_dataparser

@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700"
+    style="font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+    <defs>
+        <filter id="shadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1" />
+        </filter>
+    </defs>
+
+    <!-- Background -->
+    <rect width="100%" height="100%" fill="#FAFBFC" />
+
+    <!-- Title -->
+    <rect x="0" y="0" width="1100" height="50" fill="#1E293B" />
+    <text x="550" y="32" text-anchor="middle" font-size="17" font-weight="600" fill="white">图 5-2a：平台能力全景图（Capability
+        Map）</text>
+    <text x="550" y="48" text-anchor="middle" font-size="10" fill="#94A3B8">回答：平台具备哪些基础能力域？ | 本图不呈现顺序，仅展示能力分区</text>
+
+    <!-- Capability Domain 1: Identity -->
+    <g transform="translate(40, 80)">
+        <rect width="240" height="140" rx="10" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#4F46E5" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">身份与标识能力</text>
+        <text x="16" y="54" font-size="10" fill="#3730A3">• 对象唯一标识 (OID)</text>
+        <text x="16" y="72" font-size="10" fill="#3730A3">• 能力唯一标识 (CID)</text>
+        <text x="16" y="90" font-size="10" fill="#3730A3">• 作业唯一标识 (JID)</text>
+        <text x="16" y="108" font-size="10" fill="#3730A3">• 最小可追溯集生成</text>
+        <text x="16" y="126" font-size="10" fill="#3730A3">• 分级标注 (G0-G2)</text>
+    </g>
+
+    <!-- Capability Domain 2: Capability Registration -->
+    <g transform="translate(300, 80)">
+        <rect width="240" height="140" rx="10" fill="#EDE9FE" stroke="#DDD6FE" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#7C3AED" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">能力接入与备案能力</text>
+        <text x="16" y="54" font-size="10" fill="#5B21B6">• 模型能力描述</text>
+        <text x="16" y="72" font-size="10" fill="#5B21B6">• 接口规范化封装</text>
+        <text x="16" y="90" font-size="10" fill="#5B21B6">• 版本签章</text>
+        <text x="16" y="108" font-size="10" fill="#5B21B6">• 合规测试</text>
+        <text x="16" y="126" font-size="10" fill="#5B21B6">• 白名单/黑名单管理</text>
+    </g>
+
+    <!-- Capability Domain 3: Routing -->
+    <g transform="translate(560, 80)">
+        <rect width="240" height="140" rx="10" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#D97706" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">路由与编排能力</text>
+        <text x="16" y="54" font-size="10" fill="#92400E">• 策略规则引擎</text>
+        <text x="16" y="72" font-size="10" fill="#92400E">• 作业图生成 (DAG)</text>
+        <text x="16" y="90" font-size="10" fill="#92400E">• 算力路由决策</text>
+        <text x="16" y="108" font-size="10" fill="#92400E">• 多云调度优化</text>
+        <text x="16" y="126" font-size="10" fill="#92400E">• 成本/时效/安全约束</text>
+    </g>
+
+    <!-- Capability Domain 4: Generation -->
+    <g transform="translate(820, 80)">
+        <rect width="240" height="140" rx="10" fill="#FEE2E2" stroke="#FECACA" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#DC2626" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">生成与重建能力</text>
+        <text x="16" y="54" font-size="10" fill="#991B1B">• Image-to-3D</text>
+        <text x="16" y="72" font-size="10" fill="#991B1B">• 视频转几何</text>
+        <text x="16" y="90" font-size="10" fill="#991B1B">• 逆渲染 (PBR提取)</text>
+        <text x="16" y="108" font-size="10" fill="#991B1B">• NeRF/GS 转换</text>
+        <text x="16" y="126" font-size="10" fill="#991B1B">• 动画绑定 / 物理注入</text>
+    </g>
+
+    <!-- Capability Domain 5: Normalization -->
+    <g transform="translate(40, 240)">
+        <rect width="240" height="140" rx="10" fill="#DBEAFE" stroke="#BFDBFE" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#2563EB" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">工业规范化能力</text>
+        <text x="16" y="54" font-size="10" fill="#1E40AF">• 拓扑重建 (Quad)</text>
+        <text x="16" y="72" font-size="10" fill="#1E40AF">• UV 展开</text>
+        <text x="16" y="90" font-size="10" fill="#1E40AF">• 尺度 / 坐标系校准</text>
+        <text x="16" y="108" font-size="10" fill="#1E40AF">• 色彩管理 (ACES)</text>
+        <text x="16" y="126" font-size="10" fill="#1E40AF">• USD / OTIO 格式约束</text>
+    </g>
+
+    <!-- Capability Domain 6: Quality -->
+    <g transform="translate(300, 240)">
+        <rect width="240" height="140" rx="10" fill="#E0F2FE" stroke="#BAE6FD" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#0284C7" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">质量校验能力</text>
+        <text x="16" y="54" font-size="10" fill="#075985">• 镜头级一致性检测</text>
+        <text x="16" y="72" font-size="10" fill="#075985">• 跨部门复用性验证</text>
+        <text x="16" y="90" font-size="10" fill="#075985">• 工程可编辑性评估</text>
+        <text x="16" y="108" font-size="10" fill="#075985">• 资产完整性校验</text>
+        <text x="16" y="126" font-size="10" fill="#075985">• 元数据一致性</text>
+    </g>
+
+    <!-- Capability Domain 7: Compliance -->
+    <g transform="translate(560, 240)">
+        <rect width="240" height="140" rx="10" fill="#D1FAE5" stroke="#A7F3D0" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#059669" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">合规与安全能力</text>
+        <text x="16" y="54" font-size="10" fill="#065F46">• AIGC 标识嵌入/查验</text>
+        <text x="16" y="72" font-size="10" fill="#065F46">• 训练数据授权核验</text>
+        <text x="16" y="90" font-size="10" fill="#065F46">• 深伪/敏感内容检测</text>
+        <text x="16" y="108" font-size="10" fill="#065F46">• 供应链安全扫描</text>
+        <text x="16" y="126" font-size="10" fill="#065F46">• 运行时沙箱隔离</text>
+    </g>
+
+    <!-- Capability Domain 8: Evidence -->
+    <g transform="translate(820, 240)">
+        <rect width="240" height="140" rx="10" fill="#FCE7F3" stroke="#FBCFE8" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#DB2777" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">存证与证据能力</text>
+        <text x="16" y="54" font-size="10" fill="#9D174D">• 可信时间戳</text>
+        <text x="16" y="72" font-size="10" fill="#9D174D">• 区块链存证</text>
+        <text x="16" y="90" font-size="10" fill="#9D174D">• 零知识证明</text>
+        <text x="16" y="108" font-size="10" fill="#9D174D">• 司法采信包生成</text>
+        <text x="16" y="126" font-size="10" fill="#9D174D">• 侵权复现支持</text>
+    </g>
+
+    <!-- Capability Domain 9: Delivery -->
+    <g transform="translate(170, 400)">
+        <rect width="240" height="140" rx="10" fill="#CCFBF1" stroke="#99F6E4" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#0D9488" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">凭证化交付能力</text>
+        <text x="16" y="54" font-size="10" fill="#115E59">• 标准资产包封装</text>
+        <text x="16" y="72" font-size="10" fill="#115E59">• 授权通证生成</text>
+        <text x="16" y="90" font-size="10" fill="#115E59">• 使用边界定义</text>
+        <text x="16" y="108" font-size="10" fill="#115E59">• 调用接口发布</text>
+        <text x="16" y="126" font-size="10" fill="#115E59">• 长期迁移策略</text>
+    </g>
+
+    <!-- Capability Domain 10: Structural Entry -->
+    <g transform="translate(430, 400)">
+        <rect width="240" height="140" rx="10" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#6B7280" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">结构化解析能力</text>
+        <text x="16" y="54" font-size="10" fill="#374151">• 剧本语义拆解</text>
+        <text x="16" y="72" font-size="10" fill="#374151">• 镜头清单生成</text>
+        <text x="16" y="90" font-size="10" fill="#374151">• 资产蓝图化</text>
+        <text x="16" y="108" font-size="10" fill="#374151">• 需求约束提取</text>
+        <text x="16" y="126" font-size="10" fill="#374151">• 分镜到资产映射</text>
+    </g>
+
+    <!-- Capability Domain 11: Agent Execution -->
+    <g transform="translate(690, 400)">
+        <rect width="240" height="140" rx="10" fill="#FDF4FF" stroke="#F5D0FE" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="240" height="32" rx="10" fill="#A855F7" />
+        <text x="120" y="21" text-anchor="middle" font-size="12" font-weight="600" fill="white">Agent 执行能力</text>
+        <text x="16" y="54" font-size="10" fill="#7E22CE">• 谱系自动维护</text>
+        <text x="16" y="72" font-size="10" fill="#7E22CE">• 前置合规校验</text>
+        <text x="16" y="90" font-size="10" fill="#7E22CE">• 存证触发</text>
+        <text x="16" y="108" font-size="10" fill="#7E22CE">• 路由成本优化</text>
+        <text x="16" y="126" font-size="10" fill="#7E22CE">• 授权凭证签发</text>
+    </g>
+
+    <!-- Annotation -->
+    <rect x="40" y="570" width="1020" height="80" rx="8" fill="#F1F5F9" stroke="#E2E8F0" />
+    <text x="550" y="598" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">架构说明</text>
+    <text x="550" y="620" text-anchor="middle" font-size="11" fill="#64748B">本图展示平台的 11 大能力域，每个能力域包含若干原子能力。</text>
+    <text x="550" y="638" text-anchor="middle" font-size="11" fill="#64748B">能力之间无先后顺序；它们将被"管线模板"按制度化规则组合。</text>
+
+    <!-- Footer -->
+    <text x="550" y="680" text-anchor="middle" font-size="9" fill="#94A3B8">图 5-2a：平台能力全景图 (Capability Map) ©
+        2026</text>
+</svg>

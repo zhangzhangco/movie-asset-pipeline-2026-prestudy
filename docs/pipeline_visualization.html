@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 国家电影数字资产平台 - 模块化系统蓝图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b1120;
+            --module-bg: #1e293b;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #8b5cf6;
+            --success: #10b981;
+            --std-gold: #f59e0b;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+            background-image:
+                linear-gradient(rgba(30, 41, 59, 0.5) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 41, 59, 0.5) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-badge {
+            display: block;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+            margin-bottom: 50px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Modular Grid Layout */
+        .system-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        .module-card {
+            background: var(--module-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.3);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .module-icon {
+            font-size: 1.5rem;
+        }
+
+        .module-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .feature-tag {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .feature-tag.std {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--std-gold);
+        }
+
+        .arrow-connector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--border);
+            font-size: 2rem;
+        }
+
+        /* Full Width Diagram */
+        .diagram-section {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: #fff;
+            border-left: 4px solid var(--accent-secondary);
+            padding-left: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>2026 国家电影数字资产平台 · 模块化系统设计</h1>
+        <span class="header-badge">National Film Digital Asset Platform · System Blueprint V1.3</span>
+
+        <!-- 模块化卡片视图 (Modular View) -->
+        <div class="system-grid">
+
+            <!-- Module 1 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <span class="module-icon">📥</span>
+                    <span class="module-title">M1. 摄取与合规<br><small>Ingestion & Compliance</small></span>
+                </div>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span>自动化收录监视</span>
+                        <span class="feature-tag">Watchdog</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>色彩空间预检</span>
+                        <span class="feature-tag std">ACEScg</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>位深与格式校验</span>
+                        <span class="feature-tag text-bg-dark">OpenImageIO</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Module 2 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <span class="module-icon">🧠</span>
+                    <span class="module-title">M2. 智能语义路由<br><small>Semantic Router</small></span>
+                </div>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span>视觉内容理解</span>
+                        <span class="feature-tag">VLM</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>前景背景分离</span>
+                        <span class="feature-tag">SAM 2</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>资产类型分发</span>
+                        <span class="feature-tag">Dispatcher</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Module 3 -->
+            <div class="module-card"
+                style="border-color: var(--accent-secondary); background: rgba(139, 92, 246, 0.05);">
+                <div class="module-header">
+                    <span class="module-icon">🏭</span>
+                    <span class="module-title">M3. 混合生产引擎<br><small>Hybrid Production</small></span>
+                </div>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span>Track A: 场景重建</span>
+                        <span class="feature-tag">DUSt3R</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>Track B: 道具生成</span>
+                        <span class="feature-tag">TRELLIS</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>Track C: 材质纹理</span>
+                        <span class="feature-tag">AI PBR</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Module 4 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <span class="module-icon">📦</span>
+                    <span class="module-title">M4. 国标封装与确权<br><small>Packaging & Rights</small></span>
+                </div>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span>数字对象标识符</span>
+                        <span class="feature-tag std">GB/T 36369</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>通用场景描述格式</span>
+                        <span class="feature-tag std">OpenUSD</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>版权/生成谱系水印</span>
+                        <span class="feature-tag std">C2PA</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>自动减面代理 (Proxy)</span>
+                        <span class="feature-tag">AutoLOD</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Module 5 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <span class="module-icon">🏛️</span>
+                    <span class="module-title">M5. 国家级资产库<br><small>Asset Library</small></span>
+                </div>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span>Props (道具库)</span>
+                        <span class="feature-tag">Object</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>Scenes (场景库)</span>
+                        <span class="feature-tag">Spatial</span>
+                    </li>
+                    <li class="feature-item">
+                        <span>Materials (材质库)</span>
+                        <span class="feature-tag">Texture</span>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+        <!-- 工作流图 (Process Diagram) -->
+        <div class="diagram-section">
+            <h2 class="section-title">详细工作流设计 (Detailed Workflow)</h2>
+            <div class="mermaid">
+                %%{
+                init: {
+                'theme': 'base',
+                'themeVariables': {
+                'primaryColor': '#1e293b',
+                'primaryTextColor': '#e2e8f0',
+                'primaryBorderColor': '#475569',
+                'lineColor': '#64748b',
+                'secondaryColor': '#0f172a',
+                'tertiaryColor': '#0f172a',
+                'fontFamily': 'Noto Sans SC'
+                },
+                'flowchart': { 'curve': 'monotoneX' }
+                }
+                }%%
+                graph LR
+                %% 节点样式
+                classDef mod fill:#1e293b,stroke:#64748b,stroke-width:1px,color:#fff,rx:4;
+                classDef gate fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#f59e0b,rx:4,stroke-dasharray: 3 3;
+                classDef core fill:#1e293b,stroke:#8b5cf6,stroke-width:2px,color:#fff,rx:4;
+                classDef standard fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#fff,rx:4;
+
+                %% M1 摄取
+                subgraph M1 ["M1. 摄取"]
+                Input("📂 原始素材"):::mod --> IO{"OpenImageIO<br />合规检查"}:::gate
+                end
+
+                %% M2 路由
+                subgraph M2 ["M2. 路由"]
+                IO -->|Pass| VLM("VLM 语义分析"):::mod
+                VLM --> SAM("SAM2 分割"):::mod
+                SAM --> Disp{"类型分发"}:::mod
+                end
+
+                %% M3 生产
+                subgraph M3 ["M3. 生产"]
+                Disp -->|Props| TR("Track B: TRELLIS"):::core
+                Disp -->|Scene| DU("Track A: DUSt3R"):::core
+                Disp -->|Material| PBR("Track C: AI PBR"):::core
+                end
+
+                %% M4 封装
+                subgraph M4 ["M4. 封装 (Critical)"]
+                TR --> LOD("Auto LOD"):::mod
+                DU --> LOD
+
+                LOD --> USD["OpenUSD 组装"]:::standard
+                PBR --> USD
+
+                USD --> META["GB/T 36369 赋码"]:::standard
+                META --> RIGHTS["C2PA 水印注入"]:::standard
+                end
+
+                %% M5 存储
+                subgraph M5 ["M5. 存储"]
+                RIGHTS --> LIB[("🏛️ 资产入库")]:::mod
+                end
+
+                %% 错误流
+                IO -.->|Fail| ERR("❌ 错误归档"):::mod
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            securityLevel: 'loose',
+        });
+    </script>
+
+</body>
+
+</html>

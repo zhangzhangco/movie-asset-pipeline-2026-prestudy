@@ -1,0 +1,219 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 750"
+    style="font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+    <defs>
+        <filter id="shadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1" />
+        </filter>
+        <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <path d="M0,0 L10,3.5 L0,7 L2,3.5 Z" fill="#64748B" />
+        </marker>
+    </defs>
+
+    <!-- Background -->
+    <rect width="100%" height="100%" fill="#FAFBFC" />
+
+    <!-- Title -->
+    <rect x="0" y="0" width="1100" height="50" fill="#1E293B" />
+    <text x="550" y="32" text-anchor="middle" font-size="17" font-weight="600" fill="white">图 5-2b：管线模板图（Pipeline
+        Templates）</text>
+    <text x="550" y="48" text-anchor="middle" font-size="10" fill="#94A3B8">回答：平台内置了哪些制度化管线类型？ | 每条管线 = 能力按固定模式组合</text>
+
+    <!-- Pipeline 1: Identity -->
+    <g transform="translate(40, 70)">
+        <rect width="1020" height="80" rx="8" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="180" height="80" rx="8" fill="#4F46E5" />
+        <text x="90" y="35" text-anchor="middle" font-size="13" font-weight="600" fill="white">输入身份化管线</text>
+        <text x="90" y="52" text-anchor="middle" font-size="9" fill="#C7D2FE">Identity Pipeline</text>
+
+        <!-- Capability sequence -->
+        <rect x="200" y="20" width="110" height="40" rx="6" fill="white" stroke="#A5B4FC" />
+        <text x="255" y="44" text-anchor="middle" font-size="10" fill="#3730A3">哈希计算</text>
+        <line x1="310" y1="40" x2="335" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="340" y="20" width="110" height="40" rx="6" fill="white" stroke="#A5B4FC" />
+        <text x="395" y="44" text-anchor="middle" font-size="10" fill="#3730A3">授权链摘要</text>
+        <line x1="450" y1="40" x2="475" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="480" y="20" width="110" height="40" rx="6" fill="white" stroke="#A5B4FC" />
+        <text x="535" y="44" text-anchor="middle" font-size="10" fill="#3730A3">ID 分配</text>
+        <line x1="590" y1="40" x2="615" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="620" y="20" width="110" height="40" rx="6" fill="white" stroke="#A5B4FC" />
+        <text x="675" y="44" text-anchor="middle" font-size="10" fill="#3730A3">分级标注</text>
+        <line x1="730" y1="40" x2="755" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="760" y="20" width="110" height="40" rx="6" fill="white" stroke="#A5B4FC" />
+        <text x="815" y="44" text-anchor="middle" font-size="10" fill="#3730A3">存证固化</text>
+
+        <rect x="890" y="20" width="110" height="40" rx="6" fill="#4F46E5" />
+        <text x="945" y="44" text-anchor="middle" font-size="10" font-weight="600" fill="white">→ 身份化资产</text>
+    </g>
+
+    <!-- Pipeline 2: Capability Registration -->
+    <g transform="translate(40, 160)">
+        <rect width="1020" height="80" rx="8" fill="#EDE9FE" stroke="#DDD6FE" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="180" height="80" rx="8" fill="#7C3AED" />
+        <text x="90" y="35" text-anchor="middle" font-size="13" font-weight="600" fill="white">能力接入管线</text>
+        <text x="90" y="52" text-anchor="middle" font-size="9" fill="#DDD6FE">Capability Pipeline</text>
+
+        <rect x="200" y="20" width="100" height="40" rx="6" fill="white" stroke="#C4B5FD" />
+        <text x="250" y="44" text-anchor="middle" font-size="10" fill="#5B21B6">能力描述</text>
+        <line x1="300" y1="40" x2="320" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="325" y="20" width="100" height="40" rx="6" fill="white" stroke="#C4B5FD" />
+        <text x="375" y="44" text-anchor="middle" font-size="10" fill="#5B21B6">接口规范化</text>
+        <line x1="425" y1="40" x2="445" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="450" y="20" width="100" height="40" rx="6" fill="white" stroke="#C4B5FD" />
+        <text x="500" y="44" text-anchor="middle" font-size="10" fill="#5B21B6">合规测试</text>
+        <line x1="550" y1="40" x2="570" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="575" y="20" width="100" height="40" rx="6" fill="white" stroke="#C4B5FD" />
+        <text x="625" y="44" text-anchor="middle" font-size="10" fill="#5B21B6">版本签章</text>
+        <line x1="675" y1="40" x2="695" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="700" y="20" width="100" height="40" rx="6" fill="white" stroke="#C4B5FD" />
+        <text x="750" y="44" text-anchor="middle" font-size="10" fill="#5B21B6">白名单准入</text>
+
+        <rect x="820" y="20" width="180" height="40" rx="6" fill="#7C3AED" />
+        <text x="910" y="44" text-anchor="middle" font-size="10" font-weight="600" fill="white">→ 已备案工业能力单元</text>
+    </g>
+
+    <!-- Pipeline 3: Generation (e.g., Image-to-3D) -->
+    <g transform="translate(40, 250)">
+        <rect width="1020" height="80" rx="8" fill="#FEE2E2" stroke="#FECACA" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="180" height="80" rx="8" fill="#DC2626" />
+        <text x="90" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="white">资产生成管线</text>
+        <text x="90" y="47" text-anchor="middle" font-size="9" fill="#FECACA">(示例: Image-to-3D)</text>
+        <text x="90" y="62" text-anchor="middle" font-size="9" fill="#FECACA">Generation Pipeline</text>
+
+        <rect x="200" y="20" width="100" height="40" rx="6" fill="white" stroke="#FCA5A5" />
+        <text x="250" y="44" text-anchor="middle" font-size="10" fill="#991B1B">结构推理</text>
+        <line x1="300" y1="40" x2="320" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="325" y="20" width="100" height="40" rx="6" fill="white" stroke="#FCA5A5" />
+        <text x="375" y="44" text-anchor="middle" font-size="10" fill="#991B1B">几何重建</text>
+        <line x1="425" y1="40" x2="445" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="450" y="20" width="100" height="40" rx="6" fill="white" stroke="#FCA5A5" />
+        <text x="500" y="44" text-anchor="middle" font-size="10" fill="#991B1B">逆渲染</text>
+        <line x1="550" y1="40" x2="570" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="575" y="20" width="100" height="40" rx="6" fill="white" stroke="#FCA5A5" />
+        <text x="625" y="44" text-anchor="middle" font-size="10" fill="#991B1B">PBR 提取</text>
+        <line x1="675" y1="40" x2="695" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="700" y="20" width="100" height="40" rx="6" fill="white" stroke="#FCA5A5" />
+        <text x="750" y="44" text-anchor="middle" font-size="10" fill="#991B1B">物理注入</text>
+
+        <rect x="820" y="20" width="180" height="40" rx="6" fill="#DC2626" />
+        <text x="910" y="44" text-anchor="middle" font-size="10" font-weight="600" fill="white">→ 原始生成资产</text>
+    </g>
+
+    <!-- Pipeline 4: Normalization -->
+    <g transform="translate(40, 340)">
+        <rect width="1020" height="80" rx="8" fill="#DBEAFE" stroke="#BFDBFE" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="180" height="80" rx="8" fill="#2563EB" />
+        <text x="90" y="35" text-anchor="middle" font-size="13" font-weight="600" fill="white">工业规范化管线</text>
+        <text x="90" y="52" text-anchor="middle" font-size="9" fill="#BFDBFE">Normalization Pipeline</text>
+
+        <rect x="200" y="20" width="100" height="40" rx="6" fill="white" stroke="#93C5FD" />
+        <text x="250" y="44" text-anchor="middle" font-size="10" fill="#1E40AF">拓扑重建</text>
+        <line x1="300" y1="40" x2="320" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="325" y="20" width="100" height="40" rx="6" fill="white" stroke="#93C5FD" />
+        <text x="375" y="44" text-anchor="middle" font-size="10" fill="#1E40AF">UV 展开</text>
+        <line x1="425" y1="40" x2="445" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="450" y="20" width="100" height="40" rx="6" fill="white" stroke="#93C5FD" />
+        <text x="500" y="44" text-anchor="middle" font-size="10" fill="#1E40AF">尺度校准</text>
+        <line x1="550" y1="40" x2="570" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="575" y="20" width="100" height="40" rx="6" fill="white" stroke="#93C5FD" />
+        <text x="625" y="44" text-anchor="middle" font-size="10" fill="#1E40AF">色彩管理</text>
+        <line x1="675" y1="40" x2="695" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="700" y="20" width="100" height="40" rx="6" fill="white" stroke="#93C5FD" />
+        <text x="750" y="44" text-anchor="middle" font-size="10" fill="#1E40AF">USD 封装</text>
+
+        <rect x="820" y="20" width="180" height="40" rx="6" fill="#2563EB" />
+        <text x="910" y="44" text-anchor="middle" font-size="10" font-weight="600" fill="white">→ 工业标准资产</text>
+    </g>
+
+    <!-- Pipeline 5: Compliance -->
+    <g transform="translate(40, 430)">
+        <rect width="1020" height="80" rx="8" fill="#D1FAE5" stroke="#A7F3D0" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="180" height="80" rx="8" fill="#059669" />
+        <text x="90" y="35" text-anchor="middle" font-size="13" font-weight="600" fill="white">合规审计管线</text>
+        <text x="90" y="52" text-anchor="middle" font-size="9" fill="#A7F3D0">Compliance Pipeline</text>
+
+        <rect x="200" y="20" width="115" height="40" rx="6" fill="white" stroke="#6EE7B7" />
+        <text x="257" y="44" text-anchor="middle" font-size="10" fill="#065F46">AIGC 标识</text>
+        <line x1="315" y1="40" x2="335" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="340" y="20" width="115" height="40" rx="6" fill="white" stroke="#6EE7B7" />
+        <text x="397" y="44" text-anchor="middle" font-size="10" fill="#065F46">授权核验</text>
+        <line x1="455" y1="40" x2="475" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="480" y="20" width="115" height="40" rx="6" fill="white" stroke="#6EE7B7" />
+        <text x="537" y="44" text-anchor="middle" font-size="10" fill="#065F46">深伪检测</text>
+        <line x1="595" y1="40" x2="615" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="620" y="20" width="115" height="40" rx="6" fill="white" stroke="#6EE7B7" />
+        <text x="677" y="44" text-anchor="middle" font-size="10" fill="#065F46">供应链扫描</text>
+        <line x1="735" y1="40" x2="755" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="760" y="20" width="115" height="40" rx="6" fill="white" stroke="#6EE7B7" />
+        <text x="817" y="44" text-anchor="middle" font-size="10" fill="#065F46">沙箱隔离</text>
+
+        <rect x="895" y="20" width="105" height="40" rx="6" fill="#059669" />
+        <text x="947" y="44" text-anchor="middle" font-size="10" font-weight="600" fill="white">→ 合规通过</text>
+    </g>
+
+    <!-- Pipeline 6: Delivery -->
+    <g transform="translate(40, 520)">
+        <rect width="1020" height="80" rx="8" fill="#CCFBF1" stroke="#99F6E4" stroke-width="1.5"
+            filter="url(#shadow)" />
+        <rect x="0" y="0" width="180" height="80" rx="8" fill="#0D9488" />
+        <text x="90" y="35" text-anchor="middle" font-size="13" font-weight="600" fill="white">凭证交付管线</text>
+        <text x="90" y="52" text-anchor="middle" font-size="9" fill="#99F6E4">Credential Pipeline</text>
+
+        <rect x="200" y="20" width="115" height="40" rx="6" fill="white" stroke="#5EEAD4" />
+        <text x="257" y="44" text-anchor="middle" font-size="10" fill="#115E59">资产包封装</text>
+        <line x1="315" y1="40" x2="335" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="340" y="20" width="115" height="40" rx="6" fill="white" stroke="#5EEAD4" />
+        <text x="397" y="44" text-anchor="middle" font-size="10" fill="#115E59">授权通证</text>
+        <line x1="455" y1="40" x2="475" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="480" y="20" width="115" height="40" rx="6" fill="white" stroke="#5EEAD4" />
+        <text x="537" y="44" text-anchor="middle" font-size="10" fill="#115E59">边界定义</text>
+        <line x1="595" y1="40" x2="615" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="620" y="20" width="115" height="40" rx="6" fill="white" stroke="#5EEAD4" />
+        <text x="677" y="44" text-anchor="middle" font-size="10" fill="#115E59">接口发布</text>
+        <line x1="735" y1="40" x2="755" y2="40" stroke="#64748B" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <rect x="760" y="20" width="115" height="40" rx="6" fill="white" stroke="#5EEAD4" />
+        <text x="817" y="44" text-anchor="middle" font-size="10" fill="#115E59">迁移策略</text>
+
+        <rect x="895" y="20" width="105" height="40" rx="6" fill="#0D9488" />
+        <text x="947" y="44" text-anchor="middle" font-size="10" font-weight="600" fill="white">→ 工业实体</text>
+    </g>
+
+    <!-- Annotation -->
+    <rect x="40" y="620" width="1020" height="80" rx="8" fill="#F1F5F9" stroke="#E2E8F0" />
+    <text x="550" y="648" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">架构原则</text>
+    <text x="550" y="670" text-anchor="middle" font-size="11" fill="#64748B">管线 = 能力按制度化规则的固定组合。管线内部调用能力，ARP
+        调用管线。</text>
+    <text x="550" y="688" text-anchor="middle" font-size="11" fill="#64748B">每条管线可独立执行，也可由 ARP 编排为更复杂的作业图。</text>
+
+    <!-- Footer -->
+    <text x="550" y="730" text-anchor="middle" font-size="9" fill="#94A3B8">图 5-2b：管线模板图 (Pipeline Templates) ©
+        2026</text>
+</svg>

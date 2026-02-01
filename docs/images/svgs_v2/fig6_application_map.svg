@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+    <defs>
+        <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="1" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.1" />
+        </filter>
+    </defs>
+
+    <rect width="800" height="400" fill="#f8fafc" />
+
+    <text x="400" y="40" font-family="sans-serif" font-size="18" font-weight="bold" fill="#334155"
+        text-anchor="middle">资产应用服务地图</text>
+
+    <!-- Quadrants -->
+    <g transform="translate(100, 80)">
+        <!-- Q1: Pre-viz -->
+        <rect x="0" y="0" width="280" height="130" rx="8" fill="#f0f9ff" stroke="#bae6fd" stroke-width="2"
+            filter="url(#shadow)" />
+        <text x="140" y="30" font-family="sans-serif" font-size="14" font-weight="bold" fill="#0369a1"
+            text-anchor="middle">1. 前期预演</text>
+        <text x="140" y="60" font-family="sans-serif" font-size="11" fill="#0c4a6e" text-anchor="middle">适用 G0/G1</text>
+        <text x="140" y="90" font-family="sans-serif" font-size="11" fill="#0c4a6e"
+            text-anchor="middle">镜头调度、数字勘景</text>
+
+        <!-- Q2: Production -->
+        <rect x="320" y="0" width="280" height="130" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="2"
+            filter="url(#shadow)" />
+        <text x="140" y="30" font-family="sans-serif" font-size="14" font-weight="bold" fill="#15803d"
+            text-anchor="middle">2. 虚拟制作</text>
+        <text x="140" y="60" font-family="sans-serif" font-size="11" fill="#14532d" text-anchor="middle">适用 G1/G2</text>
+        <text x="140" y="90" font-family="sans-serif" font-size="11" fill="#14532d"
+            text-anchor="middle">LED墙背景、快速置景</text>
+
+        <!-- Q3: VFX -->
+        <rect x="0" y="160" width="280" height="130" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="2"
+            filter="url(#shadow)" />
+        <text x="140" y="30" font-family="sans-serif" font-size="14" font-weight="bold" fill="#b91c1c"
+            text-anchor="middle">3. 后期视效</text>
+        <text x="140" y="60" font-family="sans-serif" font-size="11" fill="#7f1d1d" text-anchor="middle">适用 G2+</text>
+        <text x="140" y="90" font-family="sans-serif" font-size="11" fill="#7f1d1d" text-anchor="middle">几何代理、遮挡物</text>
+
+        <!-- Q4: Derivative -->
+        <rect x="320" y="160" width="280" height="130" rx="8" fill="#fffbeb" stroke="#fcd34d" stroke-width="2"
+            filter="url(#shadow)" />
+        <text x="140" y="30" font-family="sans-serif" font-size="14" font-weight="bold" fill="#b45309"
+            text-anchor="middle">4. 衍生/文旅</text>
+        <text x="140" y="60" font-family="sans-serif" font-size="11" fill="#78350f" text-anchor="middle">适用 G1/G2</text>
+        <text x="140" y="90" font-family="sans-serif" font-size="11" fill="#78350f"
+            text-anchor="middle">沉浸式展陈、VR交互</text>
+    </g>
+
+</svg>

@@ -1,0 +1,243 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750"
+    style="font-family: 'Inter', 'Noto Sans SC', sans-serif;">
+    <defs>
+        <!-- Gradients -->
+        <linearGradient id="headerIndigo" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#4F46E5" />
+            <stop offset="100%" style="stop-color:#6366F1" />
+        </linearGradient>
+        <linearGradient id="headerAmber" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#D97706" />
+            <stop offset="100%" style="stop-color:#F59E0B" />
+        </linearGradient>
+        <linearGradient id="headerCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#0891B2" />
+            <stop offset="100%" style="stop-color:#06B6D4" />
+        </linearGradient>
+        <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#94A3B8" />
+            <stop offset="100%" style="stop-color:#64748B" />
+        </linearGradient>
+
+        <filter id="cardShadow">
+            <feDropShadow dx="0" dy="3" stdDeviation="4" flood-opacity="0.12" />
+        </filter>
+        <filter id="zoneShadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08" />
+        </filter>
+
+        <marker id="arrow" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+            <path d="M0,0 L12,4 L0,8 L3,4 Z" fill="#64748B" />
+        </marker>
+        <marker id="arrowAmber" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+            <path d="M0,0 L12,4 L0,8 L3,4 Z" fill="#D97706" />
+        </marker>
+    </defs>
+
+    <!-- Background -->
+    <rect width="100%" height="100%" fill="#FAFBFC" />
+
+    <!-- Title Bar -->
+    <rect x="0" y="0" width="1200" height="55" fill="#1E293B" />
+    <text x="600" y="35" text-anchor="middle" font-size="18" font-weight="600"
+        fill="white">国家电影数字资产平台：多维管线协同治理网络架构</text>
+
+    <!-- ===== ZONE 1: INPUT ===== -->
+    <g transform="translate(30, 70)">
+        <rect width="210" height="650" rx="10" fill="#EEF2FF" filter="url(#zoneShadow)" />
+        <rect x="0" y="0" width="210" height="36" rx="10" fill="url(#headerIndigo)" />
+        <text x="105" y="24" text-anchor="middle" font-size="13" font-weight="600" fill="white">入口侧：身份与准入</text>
+
+        <!-- Card 1: Identity Pipeline -->
+        <g transform="translate(15, 50)">
+            <rect width="180" height="200" rx="8" fill="white" stroke="#C7D2FE" stroke-width="1"
+                filter="url(#cardShadow)" />
+            <rect x="0" y="0" width="180" height="32" rx="8" fill="#4F46E5" />
+            <text x="90" y="21" text-anchor="middle" font-size="11" font-weight="600" fill="white">1. 输入身份化管线</text>
+
+            <text x="12" y="52" font-size="10" font-weight="600" fill="#3730A3">异构输入源:</text>
+            <text x="18" y="70" font-size="9" fill="#64748B">• 历史胶片 / 素材库</text>
+            <text x="18" y="85" font-size="9" fill="#64748B">• 实时光场 / 传感器</text>
+            <text x="18" y="100" font-size="9" fill="#64748B">• 分镜 / 工程文件</text>
+
+            <line x1="12" y1="112" x2="168" y2="112" stroke="#E0E7FF" stroke-width="1" />
+
+            <text x="12" y="130" font-size="10" font-weight="600" fill="#059669">最小可追溯集:</text>
+            <text x="18" y="148" font-size="9" fill="#64748B">OID / CID / JID 分配</text>
+            <text x="18" y="163" font-size="9" fill="#64748B">哈希 + 授权链固化</text>
+            <text x="18" y="178" font-size="9" fill="#64748B">模型签章 + 环境摘要</text>
+        </g>
+
+        <!-- Card 2: Capability Pipeline -->
+        <g transform="translate(15, 270)">
+            <rect width="180" height="150" rx="8" fill="white" stroke="#C7D2FE" stroke-width="1"
+                filter="url(#cardShadow)" />
+            <rect x="0" y="0" width="180" height="32" rx="8" fill="#6366F1" />
+            <text x="90" y="21" text-anchor="middle" font-size="11" font-weight="600" fill="white">2. 能力接入备案管线</text>
+
+            <text x="12" y="52" font-size="10" font-weight="600" fill="#3730A3">外部模型管控:</text>
+            <text x="18" y="70" font-size="9" fill="#64748B">• 能力描述规范化</text>
+            <text x="18" y="85" font-size="9" fill="#64748B">• 接口标准化封装</text>
+            <text x="18" y="100" font-size="9" fill="#64748B">• 版本签章 & 合规测试</text>
+            <text x="18" y="115" font-size="9" fill="#64748B">• 分级标注 (G0-G2)</text>
+
+            <rect x="12" y="125" width="156" height="18" rx="4" fill="#EEF2FF" />
+            <text x="90" y="138" text-anchor="middle" font-size="9" font-weight="500" fill="#4F46E5">→ 封装为工业能力单元</text>
+        </g>
+    </g>
+
+    <!-- ===== ZONE 2: ARP CORE ===== -->
+    <g transform="translate(260, 70)">
+        <rect width="200" height="650" rx="10" fill="#FFFBEB" filter="url(#zoneShadow)" />
+        <rect x="0" y="0" width="200" height="36" rx="10" fill="url(#headerAmber)" />
+        <text x="100" y="24" text-anchor="middle" font-size="13" font-weight="600" fill="white">中枢层：策略路由</text>
+
+        <!-- ARP Core Card -->
+        <g transform="translate(15, 160)">
+            <rect width="170" height="280" rx="8" fill="white" stroke="#FCD34D" stroke-width="2"
+                filter="url(#cardShadow)" />
+            <rect x="0" y="0" width="170" height="36" rx="8" fill="#D97706" />
+            <text x="85" y="23" text-anchor="middle" font-size="12" font-weight="700" fill="white">3. ARP 策略中枢</text>
+
+            <text x="12" y="58" font-size="10" font-weight="600" fill="#92400E">路由决策因子:</text>
+            <text x="18" y="78" font-size="9" fill="#78350F">• 资产分级 (G0-G2)</text>
+            <text x="18" y="93" font-size="9" fill="#78350F">• 安全等级</text>
+            <text x="18" y="108" font-size="9" fill="#78350F">• 权属状态</text>
+            <text x="18" y="123" font-size="9" fill="#78350F">• 项目时效</text>
+            <text x="18" y="138" font-size="9" fill="#78350F">• 算力成本</text>
+
+            <line x1="12" y1="150" x2="158" y2="150" stroke="#FDE68A" stroke-width="1" />
+
+            <text x="12" y="170" font-size="10" font-weight="600" fill="#92400E">核心输出:</text>
+
+            <rect x="12" y="180" width="146" height="36" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1" />
+            <text x="85" y="196" text-anchor="middle" font-size="10" font-weight="600" fill="#B45309">Workflow
+                Graph</text>
+            <text x="85" y="210" text-anchor="middle" font-size="8" fill="#92400E">可审计作业图</text>
+
+            <text x="12" y="238" font-size="10" font-weight="600" fill="#92400E">路由策略:</text>
+            <text x="18" y="256" font-size="9" fill="#78350F">高密 → 私有云/本地</text>
+            <text x="18" y="271" font-size="9" fill="#78350F">脱敏 → 公有云弹性</text>
+        </g>
+    </g>
+
+    <!-- ===== ZONE 3: PROCESS MATRIX ===== -->
+    <g transform="translate(480, 70)">
+        <rect width="410" height="650" rx="10" fill="#F8FAFC" filter="url(#zoneShadow)" />
+        <rect x="0" y="0" width="410" height="36" rx="10" fill="#475569" />
+        <text x="205" y="24" text-anchor="middle" font-size="13" font-weight="600" fill="white">工序矩阵：加工 · 规范 · 治理</text>
+
+        <!-- Process Pipeline Cards (Left Column) -->
+        <g transform="translate(15, 50)">
+            <text x="0" y="14" font-size="11" font-weight="600" fill="#334155">4. 工业工序型管线</text>
+
+            <!-- 4.1 -->
+            <rect y="24" width="185" height="52" rx="6" fill="white" stroke="#CBD5E1" stroke-width="1" />
+            <rect x="0" y="24" width="185" height="20" rx="6" fill="#64748B" />
+            <text x="92" y="38" text-anchor="middle" font-size="10" font-weight="600" fill="white">4.1 结构化入口</text>
+            <text x="10" y="62" font-size="9" fill="#64748B">剧本语义拆解 / 镜头清单 / 蓝图</text>
+
+            <!-- 4.2 -->
+            <rect y="86" width="185" height="52" rx="6" fill="white" stroke="#CBD5E1" stroke-width="1" />
+            <rect x="0" y="86" width="185" height="20" rx="6" fill="#64748B" />
+            <text x="92" y="100" text-anchor="middle" font-size="10" font-weight="600" fill="white">4.2 生成与重建</text>
+            <text x="10" y="124" font-size="9" fill="#64748B">Img2 3D / NeRF / 逆渲染 / 物理</text>
+
+            <!-- 4.3 -->
+            <rect y="148" width="185" height="52" rx="6" fill="white" stroke="#CBD5E1" stroke-width="1" />
+            <rect x="0" y="148" width="185" height="20" rx="6" fill="#64748B" />
+            <text x="92" y="162" text-anchor="middle" font-size="10" font-weight="600" fill="white">4.3 工业规范化</text>
+            <text x="10" y="186" font-size="9" fill="#64748B">拓扑 / UV / USD / ACES 约束</text>
+
+            <!-- 4.4 -->
+            <rect y="210" width="185" height="52" rx="6" fill="white" stroke="#CBD5E1" stroke-width="1" />
+            <rect x="0" y="210" width="185" height="20" rx="6" fill="#64748B" />
+            <text x="92" y="224" text-anchor="middle" font-size="10" font-weight="600" fill="white">4.4 质量一致性</text>
+            <text x="10" y="248" font-size="9" fill="#64748B">镜头一致 / 复用性 / 工程检测</text>
+        </g>
+
+        <!-- Governance Pipelines (Right Column) -->
+        <g transform="translate(210, 50)">
+            <text x="0" y="14" font-size="11" font-weight="600" fill="#334155">并行治理层</text>
+
+            <!-- 5. Compliance -->
+            <rect y="24" width="185" height="80" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" />
+            <rect x="0" y="24" width="185" height="22" rx="6" fill="#16A34A" />
+            <text x="92" y="40" text-anchor="middle" font-size="10" font-weight="600" fill="white">5. 合规与安全管线</text>
+            <text x="10" y="62" font-size="9" fill="#166534">• AIGC 标识嵌入 / 查验</text>
+            <text x="10" y="76" font-size="9" fill="#166534">• 训练数据授权核验</text>
+            <text x="10" y="90" font-size="9" fill="#166534">• 深伪检测 / 供应链扫描</text>
+
+            <!-- 6. Agent -->
+            <rect y="114" width="185" height="95" rx="6" fill="#FDF4FF" stroke="#E879F9" stroke-width="1.5" />
+            <rect x="0" y="114" width="185" height="22" rx="6" fill="#A855F7" />
+            <text x="92" y="130" text-anchor="middle" font-size="10" font-weight="600" fill="white">6. Agent 职能管线</text>
+            <text x="10" y="152" font-size="9" fill="#7E22CE">• 资产管理员 - 谱系维护</text>
+            <text x="10" y="166" font-size="9" fill="#7E22CE">• 合规审查 - 前置校验</text>
+            <text x="10" y="180" font-size="9" fill="#7E22CE">• 证据固化 - 时间戳存证</text>
+            <text x="10" y="194" font-size="9" fill="#7E22CE">• 路由调度 - 成本优化</text>
+        </g>
+
+        <!-- Core Value Statement -->
+        <rect x="15" y="330" width="380" height="50" rx="8" fill="#1E293B" />
+        <text x="205" y="352" text-anchor="middle" font-size="11" font-weight="600"
+            fill="#F8FAFC">核心价值：将快速变化的算法世界</text>
+        <text x="205" y="370" text-anchor="middle" font-size="11" font-weight="600"
+            fill="#FCD34D">"翻译"为可长期依赖的确定性结构</text>
+    </g>
+
+    <!-- ===== ZONE 4: OUTPUT ===== -->
+    <g transform="translate(910, 70)">
+        <rect width="260" height="650" rx="10" fill="#ECFEFF" filter="url(#zoneShadow)" />
+        <rect x="0" y="0" width="260" height="36" rx="10" fill="url(#headerCyan)" />
+        <text x="130" y="24" text-anchor="middle" font-size="13" font-weight="600" fill="white">出口侧：凭证化交付</text>
+
+        <!-- Output Card -->
+        <g transform="translate(15, 50)">
+            <rect width="230" height="330" rx="8" fill="white" stroke="#67E8F9" stroke-width="1.5"
+                filter="url(#cardShadow)" />
+            <rect x="0" y="0" width="230" height="32" rx="8" fill="#0891B2" />
+            <text x="115" y="21" text-anchor="middle" font-size="11" font-weight="600" fill="white">7. 凭证化交付管线</text>
+
+            <!-- Output Type Cards -->
+            <rect x="12" y="44" width="206" height="60" rx="6" fill="#F0FDFA" stroke="#99F6E4" stroke-width="1" />
+            <text x="22" y="62" font-size="10" font-weight="600" fill="#0F766E">制作交付</text>
+            <text x="22" y="78" font-size="9" fill="#115E59">DCC/VP 标准资产包</text>
+            <text x="22" y="92" font-size="9" fill="#115E59">USD / OTIO 格式</text>
+
+            <rect x="12" y="114" width="206" height="60" rx="6" fill="#F0FDFA" stroke="#99F6E4" stroke-width="1" />
+            <text x="22" y="132" font-size="10" font-weight="600" fill="#0F766E">监管交付</text>
+            <text x="22" y="148" font-size="9" fill="#115E59">溯源证据包 (司法采信)</text>
+            <text x="22" y="162" font-size="9" fill="#115E59">可核验、非全量泄露</text>
+
+            <rect x="12" y="184" width="206" height="60" rx="6" fill="#F0FDFA" stroke="#99F6E4" stroke-width="1" />
+            <text x="22" y="202" font-size="10" font-weight="600" fill="#0F766E">产业交付</text>
+            <text x="22" y="218" font-size="9" fill="#115E59">授权通证 + 调用接口</text>
+            <text x="22" y="232" font-size="9" fill="#115E59">使用边界内合规流转</text>
+
+            <rect x="12" y="254" width="206" height="60" rx="6" fill="#F0FDFA" stroke="#99F6E4" stroke-width="1" />
+            <text x="22" y="272" font-size="10" font-weight="600" fill="#0F766E">长期保存</text>
+            <text x="22" y="288" font-size="9" fill="#115E59">可迁移封装策略</text>
+            <text x="22" y="302" font-size="9" fill="#115E59">百年级可读性保障</text>
+        </g>
+    </g>
+
+    <!-- ===== FLOW ARROWS ===== -->
+    <!-- Input to ARP -->
+    <path d="M 240 220 Q 250 300 260 300" fill="none" stroke="#6366F1" stroke-width="2.5" marker-end="url(#arrow)" />
+    <path d="M 240 380 Q 250 320 260 320" fill="none" stroke="#6366F1" stroke-width="2.5" marker-end="url(#arrow)" />
+
+    <!-- ARP to Process Matrix -->
+    <path d="M 460 320 L 480 180" fill="none" stroke="#D97706" stroke-width="2.5" marker-end="url(#arrowAmber)" />
+    <path d="M 460 320 L 480 280" fill="none" stroke="#D97706" stroke-width="2.5" marker-end="url(#arrowAmber)" />
+    <path d="M 460 320 L 480 380" fill="none" stroke="#D97706" stroke-width="2.5" marker-end="url(#arrowAmber)" />
+
+    <!-- Process Matrix to Output -->
+    <path d="M 890 250 L 910 250" fill="none" stroke="#64748B" stroke-width="2.5" marker-end="url(#arrow)" />
+    <path d="M 890 350 L 910 350" fill="none" stroke="#64748B" stroke-width="2.5" marker-end="url(#arrow)" />
+
+    <!-- Footer -->
+    <rect x="0" y="720" width="1200" height="30" fill="#F1F5F9" />
+    <text x="600" y="740" text-anchor="middle" font-size="10" fill="#94A3B8">图 5-2：国家电影数字资产平台多维管线协同治理网络架构 © 2026</text>
+
+</svg>

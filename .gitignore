@@ -3,6 +3,25 @@ assets/nerfstudio/poster/images*
 # Local outputs
 outputs/
 __pycache__/
+*.pyc
+
+# Heavy weights and models
+models/
+*.safetensors
+*.pth
+*.ckpt
+*.weights
+
+# Large asset files
+*.ply
+*.glb
+*.exr
+*.npy
 
 # Vendored external repos (kept local)
-modules/sam-3d-objects/
+modules/
+# modules/sam-3d-objects/ # modules/ is now covered above
+
+# System
+.DS_Store
+*.db

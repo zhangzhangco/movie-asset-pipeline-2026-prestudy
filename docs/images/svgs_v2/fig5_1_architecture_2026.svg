@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+    <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L0,8 L8,4 z" fill="#495057" />
+        </marker>
+        <style>
+            .box-solid {
+                fill: #FFFFFF;
+                stroke: #212529;
+                stroke-width: 2;
+            }
+
+            .box-dashed {
+                fill: #F8F9FA;
+                stroke: #6C757D;
+                stroke-width: 1;
+                stroke-dasharray: 4;
+            }
+
+            .line-conn {
+                stroke: #ADB5BD;
+                stroke-width: 1;
+                marker-end: url(#arrow);
+            }
+
+            .text-title {
+                font-family: 'SimHei', sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                fill: #212529;
+                text-anchor: middle;
+            }
+
+            .text-body {
+                font-family: 'SimSun', sans-serif;
+                font-size: 14px;
+                fill: #495057;
+                text-anchor: middle;
+            }
+
+            .text-sub {
+                font-family: 'SimSun', sans-serif;
+                font-size: 11px;
+                fill: #868E96;
+                text-anchor: middle;
+                font-style: italic;
+            }
+        </style>
+    </defs>
+
+    <rect width="800" height="500" fill="#FFFFFF" />
+
+    <!-- 1. 顶层：治理与策略 (Governance Layer) -->
+    <!-- 这一层代表“天”，是规则的制定者 -->
+    <g transform="translate(400, 80)">
+        <line x1="-150" y1="0" x2="150" y2="0" stroke="#212529" stroke-width="1.5" />
+        <text x="0" y="-15" class="text-title">治理与策略引擎 (Governance)</text>
+
+        <text x="-100" y="25" class="text-body">标准定义</text>
+        <text x="100" y="25" class="text-body">合规裁决</text>
+    </g>
+
+    <line x1="300" y1="80" x2="300" y2="150" class="line-conn" />
+    <line x1="500" y1="80" x2="500" y2="150" class="line-conn" />
+
+    <!-- 2. 中枢层：ARP (Hub) -->
+    <!-- 这一层代表“人”，是执行的中枢 -->
+    <g transform="translate(250, 150)">
+        <rect width="300" height="100" rx="4" class="box-solid" />
+        <text x="150" y="55" class="text-title" font-size="24">ARP 路由中枢</text>
+    </g>
+
+    <!-- 3. 能力层：生成式插件 (Generative Capabilities) -->
+    <!-- 这一层代表“器”，是能力的供给者 -->
+    <g transform="translate(140, 160)">
+        <rect width="100" height="80" rx="4" class="box-dashed" />
+        <text x="50" y="45" class="text-body" font-weight="bold">拓扑重构</text>
+        <line x1="100" y1="40" x2="110" y2="40" stroke="#6C757D" stroke-width="2" />
+    </g>
+    <g transform="translate(30, 160)">
+        <rect width="100" height="80" rx="4" class="box-dashed" />
+        <text x="50" y="45" class="text-body" font-weight="bold">脚本解析</text>
+        <line x1="100" y1="40" x2="110" y2="40" stroke="#6C757D" stroke-width="2" />
+    </g>
+
+    <g transform="translate(560, 160)">
+        <rect width="100" height="80" rx="4" class="box-dashed" />
+        <text x="50" y="45" class="text-body" font-weight="bold">PBR 材质</text>
+        <line x1="0" y1="40" x2="-10" y2="40" stroke="#6C757D" stroke-width="2" />
+    </g>
+    <g transform="translate(670, 160)">
+        <rect width="100" height="80" rx="4" class="box-dashed" />
+        <text x="50" y="45" class="text-body" font-weight="bold">绑定解算</text>
+        <line x1="0" y1="40" x2="-10" y2="40" stroke="#6C757D" stroke-width="2" />
+    </g>
+
+    <line x1="400" y1="250" x2="400" y2="350" stroke="#212529" stroke-width="2" />
+
+    <!-- 4. 基座层：可信根 (Root of Trust) -->
+    <!-- 这一层代表“地”，是万物的承载 -->
+    <g transform="translate(100, 350)">
+        <rect width="600" height="60" fill="#F1F3F5" stroke="#212529" stroke-width="2" />
+        <text x="300" y="35" class="text-title">底层可信基座 (Trust Anchor)</text>
+    </g>
+
+    <!-- 注解 -->
+    <text x="400" y="440" class="text-sub">Theory of Separation: Governance / Routing / Capability / Trust</text>
+
+</svg>
