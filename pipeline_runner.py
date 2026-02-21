@@ -34,6 +34,56 @@ SCRIPTS = {
     "check_import": os.path.join(PROJECT_ROOT, "scripts/check_import.py"),
 }
 
+
+def _signals_incomplete(signals, required_keys):
+    """Return True when any required signal is missing."""
+    return any(signals.get(key) is None for key in required_keys)
+
+
+def select_asset_type_and_backend(signals, forced_asset_type, forced_backend):
+    """Select asset type and backend with forced-route priority and rule-table fallback."""
+    signals = signals or {}
+
+    # 1) 强制资产类型优先
+    if forced_asset_type != "auto":
+        asset_type = forced_asset_type
+    else:
+        # 2) 自动路由规则表（严格顺序）
+        has_person = bool(signals.get("has_person", False))
+        has_mask = bool(signals.get("has_mask", False))
+        num_instances = signals.get("num_instances", 1)
+        area_ratio = signals.get("area_ratio", 0)
+        bg_score = signals.get("bg_score")
+
+        if has_person:
+            asset_type = "human"
+        elif has_mask or num_instances > 1 or area_ratio <= 0.5:
+            asset_type = "prop"
+        elif num_instances == 1 and area_ratio > 0.5 and bg_score == "low":
+            asset_type = "prop"
+        else:
+            asset_type = "scene"
+
+    # backend 选择
+    signals_incomplete = False
+    if forced_backend != "auto":
+        backend_selected = forced_backend
+    elif asset_type == "human":
+        backend_selected = "sam3d_body"
+    elif asset_type == "scene":
+        backend_selected = "trellis2"
+    else:
+        prop_required = ["has_mask", "num_instances", "area_ratio", "bg_score"]
+        signals_incomplete = _signals_incomplete(signals, prop_required)
+        if forced_asset_type == "prop" and signals_incomplete:
+            backend_selected = "trellis2"
+        elif signals.get("num_instances", 1) > 1 or signals.get("area_ratio", 0) <= 0.5:
+            backend_selected = "sam3d_objects"
+        else:
+            backend_selected = "trellis2"
+
+    return asset_type, backend_selected, signals_incomplete
+
 def main():
     parser = argparse.ArgumentParser(description="Movie Asset Hybrid Pipeline Orchestrator")
     parser.add_argument("--input", required=True, help="Path to input image")
@@ -139,45 +189,34 @@ def main():
             asset_name = os.path.basename(relit_file)
             signals = item.get('signals', {})
             
-            # --- Routing Logic ---
-            asset_type = args.asset_type
-            if asset_type == "auto":
-                if signals.get('has_person'):
-                    asset_type = "human"
-                elif signals.get('area_ratio', 0) > 0.8:
-                    asset_type = "scene"
-                else:
-                    asset_type = "prop"
+            asset_type, backend_selected, signals_incomplete = select_asset_type_and_backend(
+                signals=signals,
+                forced_asset_type=args.asset_type,
+                forced_backend=args.asset_gen_backend,
+            )
                     
-            backend = args.asset_gen_backend
-            if backend == "auto":
-                if asset_type == "prop":
-                    backend = "trellis2" if signals.get('num_instances', 1) == 1 else "sam3d_objects"
-                elif asset_type == "human":
-                    backend = "sam3d_body"
-                else:
-                    backend = "trellis2"
-                    
-            print(f"   Processing Asset ID: {asset_id} | Type: {asset_type} | Backend: {backend}")
+            print(f"   Processing Asset ID: {asset_id} | Type: {asset_type} | Backend: {backend_selected}")
             
             # Record in global manifest
             asset_record = {
                 "asset_id": asset_id,
                 "asset_type": asset_type,
-                "backend": backend,
+                "backend_selected": backend_selected,
                 "status": "processing",
                 "signals": signals,
                 "artifacts": {
                     "source_image": relit_file
                 }
             }
+            if args.asset_type == "prop" and signals_incomplete:
+                asset_record["signals_incomplete"] = True
             manifest.add_asset(asset_record)
             
             # Run 3D Gen backend
             props_3d_dir = os.path.join(output_dir, "props_3d")
             success = False
             try:
-                if backend == "trellis2":
+                if backend_selected == "trellis2":
                     success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "trellis2",
@@ -185,7 +224,7 @@ def main():
                         ENVS["trellis2"],
                         extra_env={"PYTHONPATH": "modules/TRELLIS.2", "ATTN_BACKEND": "naive"},
                     )
-                elif backend == "sam3d_objects":
+                elif backend_selected == "sam3d_objects":
                     success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "sam3d_objects",
@@ -193,7 +232,7 @@ def main():
                         ENVS["sam3d_objects"],
                         extra_env={"PYTHONPATH": "modules/sam-3d-objects"},
                     )
-                elif backend == "sam3d_body":
+                elif backend_selected == "sam3d_body":
                     success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "sam3d_body",
@@ -201,13 +240,13 @@ def main():
                         ENVS["base"]
                     )
                 else:
-                    print(f"❌ Unknown asset_gen_backend: {backend}")
+                    print(f"❌ Unknown asset_gen_backend: {backend_selected}")
             except Exception as e:
-                print(f"❌ Exception in backend {backend}: {e}")
+                print(f"❌ Exception in backend {backend_selected}: {e}")
 
             if not success:
                 asset_record["status"] = "failed"
-                asset_record["error"] = {"type": "BackendExecutionError", "message": f"{backend} failed to run"}
+                asset_record["error"] = {"type": "BackendExecutionError", "message": f"{backend_selected} failed to run"}
                 manifest.save()
                 continue
                 
@@ -250,7 +289,7 @@ def main():
                     print(f"   ⚠️ Blender not found in PATH, skipping import validation.")
                     asset_record["import_valid"] = "N/A"
             else:
-                 if backend != "sam3d_body":
+                 if backend_selected != "sam3d_body":
                      asset_record["status"] = "failed"
                      asset_record["error"] = {"type": "OutputMissingError", "message": f"Expected 3D model not found at {ply_path}"}
                  else:
