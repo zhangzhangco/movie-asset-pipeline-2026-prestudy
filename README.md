@@ -125,10 +125,11 @@ preStudy/
 |------|------|------|------|
 | 场景生成 | ml-sharp | `sharp` | ✅ 可用 |
 | 几何重建 | DUSt3R | `dust3r` | ✅ 可用 |
-| 道具生成 | TRELLIS | `trellis` | ✅ 生产就绪 |
-| 道具生成 | SAM 3D Objects | `sam3d-objects` | 🟡 实验中 |
+| 道具生成 (单体) | TRELLIS | `trellis` | ✅ 生产就绪 |
+| 道具生成 (分散) | SAM 3D Objects | `sam3d-objects` | 🟡 实验中 |
+| 人体结构化生成 | SAM 3D Body (SAM3DB) | `base` | 🟡 实验评估中 |
 | 视频重建 | COLMAP/3DGS | `base` | 🟡 实验中 |
-| 资产提取 | GrabCut + 人脸检测 | `base` | ✅ 可用 |
+| 资产提取 | GrabCut / SAM / 人脸检测 | `base` | ✅ 可用 |
 
 ### 数据流
 
