@@ -1,74 +1,188 @@
 # Movie Assetization Pipeline (Pre-Study 2026)
 
-This repository implements the **Hybrid 3D Generative Pipeline** for movie asset production. It orchestrates multiple state-of-the-art models (ml-sharp, DUSt3R, TRELLIS) into a unified, robust workflow for generating 3D assets from 2D movie stills.
+**实验性项目** - 探索从2D电影画面到3D数字资产的自动化生成管线
 
-## 🌟 Key Features
+## 📋 项目概述
 
-*   **End-to-End Orchestration**: A single command runs Scene Gen + Geometry + Asset Harvesting + 3D Gen (TRELLIS default; SAM3D Objects optional).
-*   **Robustness**: Handles complex scenes, multiple objects, and GPU instability (e.g. spconv/A6000 crash fixes).
-*   **Standards Compliant**: Outputs assets with GB/T 36369 metadata.
-*   **Visual Reporting**: Automatically generates HTML delivery reports.
-*   **Modular Architecture**: Steps are decoupled into independent scripts in `src/steps/`.
+这是一个**混合3D生成管线（Hybrid 3D Pipeline）**的技术验证项目，目标是将2D电影静帧/视频自动转换为可复用的3D数字资产。项目整合了多个前沿AI模型（ml-sharp, DUSt3R, TRELLIS, SAM 3D Objects），通过模块化编排实现端到端的资产生产流程。
 
-## 🚀 Quick Start
+**当前状态**: Phase 7 完成 - 技术验证阶段，已完成多条技术路线的实验对比
 
-### 1. Prerequisites
-*   **OS**: Linux (Ubuntu 22.04+ recommended)
-*   **GPU**: NVIDIA RTX A6000 or equivalent (24GB+ VRAM required)
-*   **Conda**: Installed and initialized.
+## 🎯 核心能力
 
-### 2. Usage
+### 已实现的技术路线
 
-**Run the Full Pipeline**:
+**路线A: 场景重建管线**
+- ml-sharp (场景生成) → DUSt3R (几何重建) → 3DGS 训练
+- 适用场景: 大场景/环境资产
+- 状态: ✅ 可用
+
+**路线B: 单图道具生成**
+- TRELLIS (Image-to-3D): 直接从单张图生成3D模型
+- 适用场景: 独立道具快速生成
+- 状态: ✅ 生产就绪
+
+**路线C: SAM 3D Objects (实验中)**
+- Meta SAM 3D Objects: 分割 + 3D重建
+- 适用场景: 多物体场景
+- 状态: 🟡 实验验证中 (2026-02-21 刚跑通)
+
+**路线D: 视频重建 (hobbyist_3dgs)**
+- COLMAP/GLOMAP + 3DGS 深度训练
+- 适用场景: 高保真场景重建
+- 状态: 🟡 实验中 (experiments/hobbyist_3dgs/)
+
+## 🚀 快速开始
+
+### 环境要求
+- **OS**: Linux (Ubuntu 22.04+)
+- **GPU**: NVIDIA RTX A6000 或同等级 (24GB+ VRAM)
+- **Conda**: 已安装并初始化
+
+### 安装步骤
 
 ```bash
-# This script manages all sub-processes and environments automatically
-python pipeline_runner.py --input /path/to/your/image.png
+# 1. 克隆仓库
+git clone <repo_url>
+cd preStudy
+
+# 2. 安装基础包
+pip install -e .
+
+# 3. 设置各个子环境 (参考 scripts/setup_*.sh)
+bash scripts/setup_dust3r.sh
+# ... 其他环境设置见 scripts/ 目录
 ```
 
-**Options**:
-*   `--output_root`: Custom output directory (default: `outputs/pipeline_demo`).
-*   `--skip_scene`: Skip the time-consuming ml-sharp scene generation step.
-*   `--asset_gen_backend`: Choose prop 3D generation backend: `trellis` (default) or `sam3d_objects`.
+### 运行管线
 
-### 3. Output Structure
+**基础用法 (TRELLIS后端)**:
+```bash
+python pipeline_runner.py --input /path/to/image.png
+```
 
-Outputs are organized by Session ID in `outputs/pipeline_demo/<image_name>/`:
+**使用SAM3D后端**:
+```bash
+python pipeline_runner.py --input /path/to/image.png \
+    --asset_gen_backend sam3d_objects
+```
 
-*   **`report.html`**: **Start here!** A visual summary of all generated assets.
-*   `scene_visual/`: 3DGS Background (.ply).
-*   `dust3r/`: Geometric Point Cloud (.ply).
-*   `props/`: Extracted 2D crops & Relit check images.
-*   `props_3d/`: Final 3D Assets (.ply) and Metadata (.json).
+**跳过耗时的场景生成**:
+```bash
+python pipeline_runner.py --input /path/to/image.png \
+    --skip_scene
+```
 
-## 🏗️ Architecture
+**高级选项**:
+- `--output_root`: 自定义输出目录 (默认: `outputs/pipeline_demo`)
+- `--skip_geometry`: 跳过DUSt3R几何重建
+- `--roi_hint x,y,w,h`: 手动指定道具提取区域
+- `--disable_skin_rejection`: 禁用肤色拒绝机制
 
-The project follows a **Micro-Step Orchestration** pattern:
+### 输出结构
 
-*   **`pipeline_runner.py`**: The conductor. It reads the `harvest_manifest.json` and dispatches jobs.
-*   **`src/steps/`**: Atomic capabilities.
-    *   `scene_gen/`: ml-sharp Logic.
-    *   `geometry/`: DUSt3R Logic.
-    *   `assets/`: TRELLIS & Harvesting Logic.
-    *   `lighting/`: Probe Extraction.
-    *   `export/`: GB/T Wrapper.
+输出按会话ID组织在 `outputs/pipeline_demo/<image_name>/`:
 
-## 🔭 Strategic Vision
+```
+outputs/pipeline_demo/06136/
+├── report.html              # 📊 可视化报告 (从这里开始查看!)
+├── scene_visual/            # 场景3DGS背景 (.ply)
+├── dust3r/                  # DUSt3R几何点云 (.ply)
+├── props/                   # 提取的2D裁剪 & 重光照检查图
+└── props_3d/                # 最终3D资产 (.ply) + 元数据 (.json)
+```
 
-We believe digital assets must evolve from static files to intelligent agents. See our **Evolution Model**:
-👉 [**docs/vision_asset_evolution.md**](docs/vision_asset_evolution.md)
+## 🏗️ 项目架构
 
-*   **Stage 1 (Current)**: Static Assets (Renderable).
-*   **Stage 2 (Next)**: Dynamic Assets (Driveable/Rigged).
-*   **Stage 3 (Future)**: Interactive Assets (Autonomous Agents).
+### 目录结构
+```
+preStudy/
+├── pipeline_runner.py       # 🎯 主入口 - 管线编排器
+├── src/steps/               # 原子化能力单元
+│   ├── scene_gen/          # ml-sharp 场景生成
+│   ├── geometry/           # DUSt3R 几何重建
+│   ├── assets/             # TRELLIS/SAM3D + 道具提取
+│   ├── lighting/           # 光照探针提取
+│   ├── export/             # GB/T 36369 封装
+│   └── report/             # HTML报告生成
+├── movie_asset_3dgs/        # 基础库 (EXR加载/色彩管理)
+├── modules/                 # 外部依赖 (git ignored)
+│   ├── ml-sharp/
+│   ├── dust3r/
+│   ├── TRELLIS/
+│   └── sam-3d-objects/
+├── experiments/             # 实验数据
+│   ├── hobbyist_3dgs/      # 视频重建实验
+│   └── video_asset_test/
+└── scripts/                 # 工具脚本
+```
 
-## 🛠️ Maintenance & Troubleshooting
+### 技术栈
 
-*   **Environment Setup**: See `scripts/setup_*.sh` for creating necessary conda environments.
-*   **TRELLIS Crash**: If `SLAT Sampler` crashes, ensure you are using `spconv-cu118` (see `scripts/download_trellis.py` for hints).
-*   **Input Handling**: If automatic harvesting fails to pick up objects, check `src/steps/assets/harvest_hero_assets.py` to adjust ROI thresholds.
+| 组件 | 技术 | 环境 | 状态 |
+|------|------|------|------|
+| 场景生成 | ml-sharp | `sharp` | ✅ 可用 |
+| 几何重建 | DUSt3R | `dust3r` | ✅ 可用 |
+| 道具生成 | TRELLIS | `trellis` | ✅ 生产就绪 |
+| 道具生成 | SAM 3D Objects | `sam3d-objects` | 🟡 实验中 |
+| 视频重建 | COLMAP/3DGS | `base` | 🟡 实验中 |
+| 资产提取 | GrabCut + 人脸检测 | `base` | ✅ 可用 |
+
+### 数据流
+
+```mermaid
+graph LR
+    A[输入图片] --> B{路由决策}
+    B -->|单图| C[Track A: TRELLIS/SAM3D]
+    B -->|场景| D[Track B: ml-sharp + DUSt3R]
+    B -->|视频| E[Track C: COLMAP + 3DGS]
+    C --> F[工业规范化]
+    D --> F
+    E --> F
+    F --> G[GB/T封装]
+    G --> H[交付包]
+```
+
+## 📊 实验记录
+
+### 最近实验 (2026-02-21)
+- ✅ SAM 3D Objects 模型获取问题已解决
+- ✅ 完成多个SAM3D实验 (outputs/pipeline_demo/06136, 09265等)
+- 🔄 正在对比 TRELLIS vs SAM3D 的质量差异
+
+### 历史实验
+- `experiments/hobbyist_3dgs/city_max/`: 362帧视频重建实验
+- `experiments/video_asset_test/`: 视频资产化测试
+
+## 🛠️ 故障排查
+
+**常见问题**:
+
+1. **TRELLIS确保使用 `spconv-cu118`，参考 `scripts/download_trellis.py`
+2. **道具提取失败**: 调整 `harvest_hero_assets.py` 中的ROI阈值，或使用 `--roi_hint` 手动指定
+3. **显存不足**: 使用 `--skip_scene` 跳过耗显存的场景生成步骤
+4. **SAM3D模型缺失**: 参考 `scripts/setup_sam3d_objects.md`
+
+**环境设置**:
+- 各conda环境的详细设置见 `scripts/setup_*.sh`
+- 确认 `modules/` 目录下有对应的模型代码
+
+## 📚 相关文档
+
+- **技术架构**: `technical_architecture.md` - 3DGS vs NeRF对比、工程化设计
+- **实施计划**: `implementation_plan.md` - 开发里程碑
+- **编码规范**: `AGENTS.md` - AI助手使用指南
+- **学术文档**: `docs/manuscript_v2_supply_chain.md` - 资产供给链理论框架
+
+## 🔬 研究方向
+
+本项目是 **"电影内容资产化工程化转换与质量评测关键技术"** 研究的一部分，探索：
+1. 生成式AI在电影资产生产中的应用
+2. 多技术路线的对比与融合
+3. 资产质量的客观评测体系
+4. 符合国家标准(GB/T 36369)的资产管理
 
 ---
-**Status**: [Phase 7 Complete] Ready for Pilot Production.
-**Author**: Zhang Xin
-**Date**: Jan 2026
+**项目状态**: 实验验证阶段  
+**作者**: Zhang Xin  
+**最后更新**: 2026-02-21

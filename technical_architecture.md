@@ -1,8 +1,24 @@
-# 技术实施方案 (Technical Architecture)
+# 技术架构文档 (Technical Architecture)
 
-## 1. 核心算法路线：为什么选择 3DGS？ (Algorithm Strategy)
+**文档状态**: 实验验证阶段 - 反映当前多技术路线并行探索的真实情况  
+**最后更新**: 2026-02-21
 
-在电影内容资产化场景下，我们对比了 **NeRF (Neural Radiance Fields)** 与 **3DGS (3D Gaussian Splatting)**，明确选择 3DGS 作为工程化首选路线。
+## 0. 架构演进说明
+
+本项目处于**技术验证阶段**，目前并非单一技术路线，而是**四条并行技术路线的对比实验**：
+
+| 路线 | 核心技术 | 适用场景 | 当前状态 |
+|------|---------|---------|---------|
+| **A: 场景重建** | ml-sharp + DUSt3R + 3DGS | 大场景/环境 | ✅ 可用 |
+| **B: 单图生成** | TRELLIS (Image-to-3D) | 独立道具 | ✅ 生产就绪 |
+| **C: SAM3D** | SAM 3D Objects | 多物体场景 | 🟡 实验中 (2026-02-21) |
+| **D: 视频重建** | COLMAP/GLOMAP + 3DGS | 高保真场景 | 🟡 实验中 |
+
+**设计理念**: 不预设"最优方案"，而是通过实际数据对比各技术路线的优劣，为后续决策提供依据。
+
+## 1. 核心算法对比：3DGS vs NeRF (Algorithm Strategy)
+
+在电影内容资产化场景下，我们对比了 **NeRF (Neural Radiance Fields)** 与 **3DGS (3D Gaussian Splatting)**：
 
 | 维度 | NeRF (e.g., Instant-NGP) | 3DGS (Gaussian Splatting) | 结论 |
 | :--- | :--- | :--- | :--- |
