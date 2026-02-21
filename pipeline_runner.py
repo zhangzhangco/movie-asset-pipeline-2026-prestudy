@@ -1,12 +1,12 @@
-
 import os
 import argparse
 import subprocess
 import sys
-import time
-import json
 import glob
 import shutil
+import json
+
+from src.core.runner_utils import StepRunner, ManifestManager
 
 # Configuration: Conda Environment Paths
 CONDA_ROOT = "/home/zhangxin/miniconda3"
@@ -33,42 +33,6 @@ SCRIPTS = {
     "report": os.path.join(PROJECT_ROOT, "src/steps/report/generate_report.py"),
     "check_import": os.path.join(PROJECT_ROOT, "scripts/check_import.py"),
 }
-
-def run_step(name, script_key, args, env_python, extra_env=None):
-    script_path = SCRIPTS.get(script_key)
-    if not script_path or not os.path.exists(script_path):
-        print(f"⚠️ Script for '{name}' not found at {script_path}, skipping.")
-        return False
-        
-    print(f"\n========================================")
-    print(f"🚀 PIPELINE STEP: {name}")
-    print(f"========================================")
-    
-    full_cmd = [env_python, script_path] + args
-    cmd_str = " ".join(full_cmd)
-    print(f"Executing: {cmd_str}")
-    
-    # Prepare Environment
-    env = os.environ.copy()
-    if extra_env:
-        for k, v in extra_env.items():
-            if k == "PYTHONPATH" and "PYTHONPATH" in env:
-                env[k] = v + os.pathsep + env[k]
-            else:
-                env[k] = v
-    
-    start_time = time.time()
-    try:
-        subprocess.check_call(full_cmd, env=env)
-        elapsed = time.time() - start_time
-        print(f"✅ Step '{name}' completed in {elapsed:.2f}s")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Step '{name}' failed with exit code {e.returncode}")
-        return False
-    except Exception as e:
-        print(f"❌ Step '{name}' failed: {e}")
-        return False
 
 def main():
     parser = argparse.ArgumentParser(description="Movie Asset Hybrid Pipeline Orchestrator")
@@ -97,68 +61,50 @@ def main():
         print(f"Error: Input file {input_path} not found.")
         return
 
-    import sys
-
-
     session_id = os.path.splitext(os.path.basename(input_path))[0]
     output_dir = os.path.join(args.output_root, session_id)
     os.makedirs(output_dir, exist_ok=True)
     
-    # 0. Initialize Global Manifest
-    global_manifest_path = os.path.join(output_dir, "manifest.json")
-    global_manifest = {
-        "session_id": session_id,
-        "inputs": {
-            "image": input_path
-        },
-        "meta": {
-            "pipeline_version": "1.3.1",
-            "command": " ".join(sys.argv)
-        },
-        "assets": []
-    }
-    
-    def save_global_manifest():
-        with open(global_manifest_path, 'w', encoding='utf-8') as f:
-            json.dump(global_manifest, f, indent=4, ensure_ascii=False)
+    # 0. Initialize Global Manifest & Step Runner
+    runner = StepRunner(SCRIPTS)
+    manifest = ManifestManager(
+        path=os.path.join(output_dir, "manifest.json"),
+        session_id=session_id,
+        input_path=input_path,
+        sys_argv=sys.argv
+    )
             
-    save_global_manifest()
-    
     print(f"🎬 Starting Pipeline for Asset: {session_id}")
     print(f"📂 Output Directory: {output_dir}")
 
     # 1. Scene Gen
     if not args.skip_scene:
-        run_step("Scene Generation (ml-sharp)", "scene_gen", 
-                 ["--input-path", input_path, "--output-path", os.path.join(output_dir, "scene_visual")],
-                 ENVS["sharp"], 
-                 extra_env={"PYTHONPATH": "modules/ml-sharp/src"})
+        runner.run("Scene Generation (ml-sharp)", "scene_gen", 
+                   ["--input-path", input_path, "--output-path", os.path.join(output_dir, "scene_visual")],
+                   ENVS["sharp"], 
+                   extra_env={"PYTHONPATH": "modules/ml-sharp/src"})
     else:
         print("⏭️ Skipping Scene Generation")
 
     # 2. Geometry
-    if not args.skip_scene:
-        run_step("Geometry Reconstruction (DUSt3R)", "geometry",
-                 ["--input", input_path, "--output", os.path.join(output_dir, "dust3r")],
-                 ENVS["dust3r"],
-                 extra_env={"PYTHONPATH": "modules/dust3r"})
+    if not args.skip_geometry and not args.skip_scene: # Added condition based on CLI arg semantics
+        runner.run("Geometry Reconstruction (DUSt3R)", "geometry",
+                   ["--input", input_path, "--output", os.path.join(output_dir, "dust3r")],
+                   ENVS["dust3r"],
+                   extra_env={"PYTHONPATH": "modules/dust3r"})
     else:
         print("⏭️ Skipping Geometry")
 
     # 3. Lighting
-    # (Assuming ml-sharp produces a ply with same name as input session_id in scene_visual dir)
-    # Wait, run_sharp.py output logic might differ. It outputs `scene.ply` or similar?
-    # Previous logs showed: "Saving 3DGS to .../scene_visual". Typically it saves as "iteration_x/point_cloud.ply".
-    # For now, let's look for ANY ply in scene_visual.
     scene_visual_dir = os.path.join(output_dir, "scene_visual")
     potential_plys = glob.glob(os.path.join(scene_visual_dir, "**", "*.ply"), recursive=True)
     potential_ply = potential_plys[0] if potential_plys else None
     
     lighting_json = os.path.join(output_dir, "lighting_probe.json")
     if potential_ply:
-        run_step("Lighting Estimation", "lighting",
-                 ["--input", potential_ply, "--output", lighting_json],
-                 ENVS["base"])
+        runner.run("Lighting Estimation", "lighting",
+                   ["--input", potential_ply, "--output", lighting_json],
+                   ENVS["base"])
     else:
         print(f"⚠️ No scene PLY found for lighting, using default.")
         with open(lighting_json, 'w') as f:
@@ -175,9 +121,7 @@ def main():
     if args.disable_skin_rejection:
         harvest_args.append("--disable_skin_rejection")
 
-    run_step("Asset Extraction & Relighting", "harvest",
-             harvest_args,
-             ENVS["base"])
+    runner.run("Asset Extraction & Relighting", "harvest", harvest_args, ENVS["base"])
 
     # 5. Iterating Asset Manifest and Routing
     prop_dir = os.path.join(output_dir, "props")
@@ -196,7 +140,6 @@ def main():
             signals = item.get('signals', {})
             
             # --- Routing Logic ---
-            # 1. Determine Asset Type
             asset_type = args.asset_type
             if asset_type == "auto":
                 if signals.get('has_person'):
@@ -206,7 +149,6 @@ def main():
                 else:
                     asset_type = "prop"
                     
-            # 2. Determine Backend
             backend = args.asset_gen_backend
             if backend == "auto":
                 if asset_type == "prop":
@@ -229,15 +171,14 @@ def main():
                     "source_image": relit_file
                 }
             }
-            global_manifest["assets"].append(asset_record)
-            save_global_manifest()
+            manifest.add_asset(asset_record)
             
             # Run 3D Gen backend
             props_3d_dir = os.path.join(output_dir, "props_3d")
             success = False
             try:
                 if backend == "trellis":
-                    success = run_step(
+                    success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "trellis",
                         ["--input", relit_file, "--output", props_3d_dir],
@@ -245,7 +186,7 @@ def main():
                         extra_env={"PYTHONPATH": "modules/TRELLIS", "ATTN_BACKEND": "naive"},
                     )
                 elif backend == "sam3d_objects":
-                    success = run_step(
+                    success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "sam3d_objects",
                         ["--input", relit_file, "--output", props_3d_dir],
@@ -253,7 +194,7 @@ def main():
                         extra_env={"PYTHONPATH": "modules/sam-3d-objects"},
                     )
                 elif backend == "sam3d_body":
-                    success = run_step(
+                    success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "sam3d_body",
                         ["--image", relit_file, "--output_dir", props_3d_dir],
@@ -261,15 +202,13 @@ def main():
                     )
                 else:
                     print(f"❌ Unknown asset_gen_backend: {backend}")
-                    success = False
             except Exception as e:
                 print(f"❌ Exception in backend {backend}: {e}")
-                success = False
 
             if not success:
                 asset_record["status"] = "failed"
                 asset_record["error"] = {"type": "BackendExecutionError", "message": f"{backend} failed to run"}
-                save_global_manifest()
+                manifest.save()
                 continue
                 
             # Run Export
@@ -277,12 +216,13 @@ def main():
             ply_path = os.path.join(props_3d_dir, ply_name)
             
             if os.path.exists(ply_path):
-                # Update global manifest
                 asset_record["artifacts"]["raw_model"] = ply_path
                 
-                pkg_success = run_step(f"Standardization ({asset_id})", "package",
-                         ["--input", ply_path, "--id", asset_id],
-                         ENVS["base"])
+                pkg_success = runner.run(
+                    f"Standardization ({asset_id})", "package",
+                    ["--input", ply_path, "--id", asset_id],
+                    ENVS["base"]
+                )
                          
                 if pkg_success:
                     asset_record["status"] = "success"
@@ -316,17 +256,17 @@ def main():
                  else:
                      asset_record["status"] = "success"
 
-            save_global_manifest()
+            manifest.save()
     else:
         print("❌ No harvest manifest found. Skipping Generation.")
         
-    # Finalize Global Manifest
-    save_global_manifest()
-
     # 6. Report
-    run_step("Report Generation", "report",
-             ["--output_root", output_dir, "--input_image", input_path],
-             ENVS["base"])
+    manifest.save()
+    runner.run(
+        "Report Generation", "report",
+        ["--output_root", output_dir, "--input_image", input_path],
+        ENVS["base"]
+    )
              
     print(f"\n🔗 Report available at: {os.path.join(output_dir, 'report.html')}")
 
