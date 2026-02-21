@@ -6,7 +6,7 @@ import sys
 # --- GLOBAL STABILITY FIX ---
 # Enforce 'naive' attention backend to prevent SIGFPE (Floating Point Exception)
 # on certain GPUs/Drivers when processing sparse voxels.
-# This must be set BEFORE importing trellis.
+# This must be set BEFORE importing trellis2.
 if "ATTN_BACKEND" not in os.environ:
     print("🛡️  Safety: Enforcing ATTN_BACKEND='naive' for stability.")
     os.environ["ATTN_BACKEND"] = "naive"
@@ -15,28 +15,27 @@ if "ATTN_BACKEND" not in os.environ:
 import torch
 import imageio
 from PIL import Image
-from trellis.pipelines import TrellisImageTo3DPipeline
-from trellis.utils import render_utils, postprocessing_utils
+from trellis2.pipelines import Trellis2ImageTo3DPipeline
+from trellis2.utils import render_utils, postprocessing_utils
 
 # Environment Guard
 try:
     import spconv
 except ImportError:
-    print("❌ ERROR: Please run this script in the 'trellis' conda environment.")
-    print("   Run: conda activate trellis")
+    print("❌ ERROR: Please run this script in the 'trellis2' conda environment.")
+    print("   Run: conda activate trellis2")
     sys.exit(1)
 
 def run_trellis_local(image_path, output_dir, seed=1):
     os.makedirs(output_dir, exist_ok=True)
     
-    model_path = "models/TRELLIS-image-large"
+    model_path = "models/TRELLIS.2-4B"
     if os.path.exists(model_path):
         print(f"Loading pipeline from local path: {model_path}...")
-        # Note: pipeline.json must be patched to have absolute paths for sub-models
-        pipeline = TrellisImageTo3DPipeline.from_pretrained(model_path)
+        pipeline = Trellis2ImageTo3DPipeline.from_pretrained(model_path)
     else:
-        print(f"Loading pipeline 'microsoft/TRELLIS-image-large' from HF...")
-        pipeline = TrellisImageTo3DPipeline.from_pretrained("microsoft/TRELLIS-image-large")
+        print(f"Loading pipeline 'microsoft/TRELLIS.2-4B' from HF...")
+        pipeline = Trellis2ImageTo3DPipeline.from_pretrained("microsoft/TRELLIS.2-4B")
     pipeline.cuda()
     
     print(f"Processing {image_path}...")
