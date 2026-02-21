@@ -259,6 +259,14 @@ class ManifestManager:
             existing.append(log_path)
         asset["run_log_paths"] = existing
         self.save()
+
+    def update_asset_fields(self, asset_id, updates):
+        asset = self._find_asset(asset_id)
+        if asset is None:
+            raise KeyError(f"Asset '{asset_id}' not found when updating fields.")
+
+        asset.update(updates or {})
+        self.save()
         
     def get_assets(self):
         """Retrieve the current list of assets."""

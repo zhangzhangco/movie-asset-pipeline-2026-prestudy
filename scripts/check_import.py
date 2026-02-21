@@ -1,62 +1,58 @@
 import sys
+import json
 import bpy
+
+def _emit_result(import_ok, stats=None, error=None):
+    payload = {
+        "import_ok": bool(import_ok),
+        "stats": stats or {},
+    }
+    if error:
+        payload["error"] = str(error)
+    print(json.dumps(payload, ensure_ascii=False))
+
+
+def _collect_mesh_stats():
+    mesh_objects = [obj for obj in bpy.data.objects if obj.type == 'MESH']
+    vertices = sum(len(obj.data.vertices) for obj in mesh_objects)
+    faces = sum(len(obj.data.polygons) for obj in mesh_objects)
+    material_names = set()
+    for obj in mesh_objects:
+        for slot in obj.material_slots:
+            if slot.material:
+                material_names.add(slot.material.name)
+
+    return {
+        "mesh_objects": len(mesh_objects),
+        "vertices": vertices,
+        "faces": faces,
+        "materials": len(material_names),
+    }
+
 
 def test_import(file_path):
     # clear scene
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
     try:
-        if file_path.lower().endswith('.ply'):
-            # In Blender 3.x, use import_mesh.ply instead of wm.ply_import
-            if hasattr(bpy.ops.import_mesh, 'ply'):
-                bpy.ops.import_mesh.ply(filepath=file_path)
-            else:
-                bpy.ops.wm.ply_import(filepath=file_path)
-                
-            # Find the imported object (usually the active one or the only mesh)
-            obj = bpy.context.active_object
-            if not obj and bpy.data.objects:
-                obj = bpy.data.objects[0]
-
-            if not obj or obj.type != 'MESH':
-                print("import check failed: no valid mesh found.")
-                return False
-
-            if len(obj.data.vertices) == 0:
-                print("import check failed: 0 vertices.")
-                return False
-
-            print(f"import check success! vertices count: {len(obj.data.vertices)}")
-            return True
-
-        elif file_path.lower().endswith('.glb') or file_path.lower().endswith('.gltf'):
+        if file_path.lower().endswith('.glb') or file_path.lower().endswith('.gltf'):
             # Clear objects first
             for obj in bpy.data.objects:
                 bpy.data.objects.remove(obj, do_unlink=True)
             
             bpy.ops.import_scene.gltf(filepath=file_path)
-            
-            # Check if any meshes were imported
-            has_mesh = False
-            for obj in bpy.data.objects:
-                if obj.type == 'MESH':
-                    if len(obj.data.vertices) > 0:
-                        has_mesh = True
-                        break
-            
-            if has_mesh:
-                print("import check success! valid gltf mesh found.")
-                return True
-            else:
-                print("import check failed: no valid geometry in gltf.")
-                return False
+            stats = _collect_mesh_stats()
+
+            has_geometry = stats["vertices"] > 0
+            _emit_result(import_ok=has_geometry, stats=stats)
+            return has_geometry
 
         else:
-            print("unsupported file format for testing.")
+            _emit_result(import_ok=False, error="unsupported_file_format")
             return False
 
     except Exception as e:
-        print(f"import check failed with exception: {str(e)}")
+        _emit_result(import_ok=False, error=str(e))
         return False
 
 if __name__ == "__main__":
