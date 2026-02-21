@@ -28,61 +28,122 @@
 | **抗噪能力** | 较强 (平滑) | 一般 (易产生 Floaters) | **NeRF 优势**：但 3DGS 可通过正则化项优化。 |
 | **显存占用** | 低 (网络权重) | 高 (百万级高斯点) | **需优化**：通过 A6000 (48GB) 大显存优势 + 剪枝算法解决。 |
 
-**实施策略**：
-*   **Base Model**: 采用官方 `3D-Gaussian-Splatting` (Inria) 作为基线。
-*   **Optimization**: 引入 `Scaffold-GS` 架构，利用其能够根据场景复杂度动态增删高斯点的特性，显著减少非关键区域的显存占用，同时保持核心主体的细节纹理。
+**当前实施策略**：
+*   **路线A/D**: 采用官方 `3D-Gaussian-Splatting` (Inria) + hobbyist_3dgs 参考实现
+*   **路线B**: TRELLIS (Microsoft) - 端到端 Image-to-3D
+*   **路线C**: SAM 3D Objects (Meta) - 分割驱动的3D重建
+*   **未来优化**: 考虑引入 `Scaffold-GS` 等变体进行显存优化
 
-## 2. 工程化转换管线设计 (Engineering Pipeline)
+## 2. 当前管线架构 (Current Pipeline Architecture)
+
+### 2.1 主管线 (pipeline_runner.py)
+
+```mermaid
+graph TD
+    A[输入: 图片/视频] --> B{输入类型判断}
+    B -->|单图| C[资产提取 harvest_hero_assets]
+    B -->|场景| D[ml-sharp 场景生成]
+    
+    D --> E[DUSt3R 几何重建]
+    E --> F[光照估计]
+    
+    C --> G{3D生成后端选择}
+    F --> G
+    
+    G -->|TRELLIS| H[TRELLIS Image-to-3D]
+    G -->|SAM3D| I[SAM 3D Objects]
+    
+    H --> J[GB/T 36369 封装]
+    I --> J
+    J --> K[HTML报告生成]
+```
+
+### 2.2 实验管线 (experiments/hobbyist_3dgs)
 
 ```mermaid
 graph LR
-    A[原始素材<br>Raw Footage 4K/8K] --> B(预处理<br>SfM/Colmap);
-    B --> C{转换引擎<br>Conversion Engine};
-    C -->|Coarse| D[稀疏点云初始化<br>Sparse Point Cloud];
-    D --> E[3DGS 训练与致密化<br>Densification];
-    E --> F[基于 A6000 的并行训练<br>Parallel Training];
-    F --> G(后处理<br>Post-Processing);
-    G --> H[去噪/剪枝<br>Pruning];
-    H --> I[资产导出<br>Asset Export];
-    I --> J[USD/PLY 格式];
+    A[视频输入] --> B[关键帧提取]
+    B --> C[COLMAP/GLOMAP SfM]
+    C --> D[3DGS 深度训练 30k iters]
+    D --> E[PLY导出]
 ```
 
-### 关键技术点：
-1.  **大分辨率支持 (4K Optimization)**：针对 A6000 显存限制，**放弃硬性的 Tiled-Based 分块训练**（避免接缝问题）。采用 **Progressive Resolution + Random Crop** 策略：
-    *   **Phase 1**: 在 1K/2K 下快速收敛几何形态。
-    *   **Phase 2**: 在 4K 下使用随机裁切 (Random Crops) 进行高频细节的反向传播。
-    *   **Memory Guard**: 动态控制 Gaussian 总数，定期剔除贡献度低的点。
-2.  **Alpha 遮罩处理**：电影绿幕素材自带 Alpha 通道。不进行硬切割，而是将 Alpha 作为 **Loss Weighting**（监督权重），重点优化边缘区域，同时确保预乘 Alpha (Premultiplied Alpha) 的正确混合，防止产生边缘光晕。
+### 2.3 关键技术实现
 
-## 3. 质量评测数学模型 (Quality Evaluation Model)
+**资产提取 (harvest_hero_assets.py)**:
+- 人脸检测 (Haar Cascade) → 多人物ROI扩展
+- GrabCut 智能分割 (生产环境计划替换为SAM2)
+- 肤色拒绝机制 (可通过 `--disable_skin_rejection` 关闭)
+- 支持手动ROI提示 (`--roi_hint x,y,w,h`)
 
-建立“客观数据”与“主观体验”的映射关系。
+**3D生成后端**:
+- **TRELLIS**: 端到端Image-to-3D，输出高斯点云(.ply)
+- **SAM3D**: 分割驱动，支持RGBA输入，利用alpha通道作为mask
 
-### 3.1 信号保真度 (Signal Fidelity)
-*   **PSNR (Peak Signal-to-Noise Ratio)**: 衡量像素级差异。目标：> 32dB。
-*   **SSIM (Structural Similarity)**: 衡量结构信息丢失。目标：> 0.95.
-*   **LPIPS (Learned Perceptual Image Patch Similarity)**: 使用 VGG 网络提取特征对比，更符合人眼对纹理的感知。目标：< 0.1。
+**工业规范化** (计划中):
+- 拓扑重构 (Retopology)
+- UV烘焙
+- 格式转换 (PLY → USD)
 
-### 3.2 资产完整性 (Asset Integrity)
-*   **Floaters Ratio (漂浮点占比)**: 计算远离主体的离散高斯点数量。过多的 Floaters 会导致渲染伪影。
-*   **Multi-view Consistency (多视角一致性)**: **[NEW]** 计算重投影误差 (Reprojection Error) 和深度图一致性 (Depth Consistency)。PSNR 无法识别的“视觉合理但在 3D 空间错误”的伪影将通过此指标检出。
-*   **Luma Consistency (亮度一致性)**: 在重光照测试中，检测物体表面反照率 (Albedo) 是否纯净。
+**元数据封装**:
+- GB/T 36369 数字对象标识符 (DOIB)
+- 最小可追溯集 (MTS): 内容摘要、权属、能力、环境
 
-## 4. 硬件适配方案 (Hardware Optimization)
+## 3. 质量评测体系 (Quality Evaluation - 规划中)
 
-**目标平台**：单卡 NVIDIA RTX A6000 (48GB VRAM)
+**当前状态**: 主要依赖人工视觉检查 + HTML报告
 
-*   **内存管理策略**：
-    *   **VRAM 占用分析**：4K 图片 Tensor 占用极大。策略：使用 `uint8` 存储 CPU 端图片，仅在训练当前 Batch 时上传并转为 `float32`，利用 PCIe 4.0 高带宽进行 Swap。
-    *   **CUDA Kernel 优化**：针对 A6000 的 Ampere 架构，优化 Rasterizer 的 Tile 排序算法，利用 Tensor Cores 加速协方差矩阵计算。
+**计划指标**:
 
-*   **部署环境**：
-    *   OS: Ubuntu 22.04 LTS (用户当前环境)
-    *   CUDA: 11.8 / 12.1
-    *   Python: 3.10
-    *   PyTorch: 2.1+ (with CUDA support)
+### 3.1 信号保真度
+- PSNR (目标: > 32dB)
+- SSIM (目标: > 0.95)
+- LPIPS (目标: < 0.1)
 
-## 5. 预期交付物形态 (Deliverables)
-1.  **Repo**: `movie-asset-3dgs`
-2.  **CLI Tool**: `asset-convert --input <folder> --quality cinema --output <file.ply>`
-3.  **Viewer Instructions**: 并不是开发新查看器，而是提供现有工业软件（UE5, SIBR）的加载配置与插件。
+### 3.2 资产完整性
+- Floaters Ratio (漂浮点占比)
+- Multi-view Consistency (多视角一致性)
+- 拓扑质量 (面数/布线合理性)
+
+### 3.3 实验对比维度
+- **TRELLIS vs SAM3D**: 单图生成质量、拓扑清洁度、处理时间
+- **单图 vs 视频**: 几何精度、纹理保真度
+- **不同采样率**: 视频重建的最优帧间隔
+
+## 4. 硬件与环境 (Hardware & Environment)
+
+**当前平台**: NVIDIA RTX A6000 (48GB VRAM)
+
+**环境配置**:
+- OS: Ubuntu 22.04 LTS
+- CUDA: 11.8 / 12.1
+- Python: 3.10
+- Conda环境隔离:
+  - `sharp`: ml-sharp场景生成
+  - `dust3r`: DUSt3R几何重建
+  - `trellis`: TRELLIS 3D生成
+  - `sam3d-objects`: SAM 3D Objects
+  - `base`: 基础Python环境 (资产提取/封装/报告)
+
+**显存管理**:
+- TRELLIS: ~20GB (单次推理)
+- DUSt3R: ~15GB (tiled模式)
+- 3DGS训练: 根据场景规模动态调整
+
+## 5. 当前交付物 (Current Deliverables)
+
+**已实现**:
+1. ✅ `pipeline_runner.py` - 端到端管线编排器
+2. ✅ 模块化步骤脚本 (`src/steps/`)
+3. ✅ HTML可视化报告
+4. ✅ GB/T 36369 元数据封装
+
+**实验中**:
+- 🟡 SAM3D后端集成
+- 🟡 视频重建管线 (hobbyist_3dgs)
+- 🟡 多技术路线对比数据
+
+**计划中**:
+- ⏳ 自动化质量评测
+- ⏳ 工业规范化后处理 (拓扑重构/UV)
+- ⏳ USD格式导出
