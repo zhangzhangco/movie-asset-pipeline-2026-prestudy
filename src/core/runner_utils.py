@@ -95,12 +95,12 @@ class StepRunner:
             return StepRunResult(success=False, returncode=-1)
             
         print(f"\n========================================")
-        print(f"🚀 PIPELINE STEP: {name}")
+        print(f"🚀 管线步骤: {name}")
         print(f"========================================")
         
         full_cmd = [env_python, script_path] + args
         cmd_str = " ".join(full_cmd)
-        print(f"Executing: {cmd_str}")
+        print(f"正在执行命令: {cmd_str}")
         
         # Prepare Environment
         env = os.environ.copy()
@@ -135,9 +135,9 @@ class StepRunner:
             )
             elapsed = time.time() - start_time
             if completed.returncode == 0:
-                print(f"✅ Step '{name}' completed in {elapsed:.2f}s")
+                print(f"✅ 步骤 '{name}' 执行成功，耗时 {elapsed:.2f}s")
             else:
-                print(f"❌ Step '{name}' failed with exit code {completed.returncode}")
+                print(f"❌ 步骤 '{name}' 执行失败，退出码: {completed.returncode}")
             return StepRunResult(
                 success=completed.returncode == 0,
                 returncode=completed.returncode,
@@ -146,7 +146,7 @@ class StepRunner:
                 duration_s=elapsed,
             )
         except Exception as e:
-            print(f"❌ Step '{name}' failed: {e}")
+            print(f"❌ 步骤 '{name}' 运行异常: {e}")
             return StepRunResult(
                 success=False,
                 returncode=-1,

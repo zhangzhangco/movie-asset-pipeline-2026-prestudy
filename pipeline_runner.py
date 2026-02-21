@@ -185,6 +185,7 @@ def select_asset_type_and_backend(signals, forced_asset_type, forced_backend):
     # 1) 强制资产类型优先
     if forced_asset_type != "auto":
         asset_type = forced_asset_type
+        print(f"   [决策] 用户强制指定资产类型为: {asset_type}")
     else:
         # 2) 自动路由规则表（严格顺序）
         has_person = bool(signals.get("has_person", False))
@@ -195,30 +196,42 @@ def select_asset_type_and_backend(signals, forced_asset_type, forced_backend):
 
         if has_person:
             asset_type = "human"
+            print(f"   [判断] 检测到人体特征信号，分类为: human (人体)")
         elif has_mask or num_instances > 1 or area_ratio <= 0.5:
             asset_type = "prop"
+            print(f"   [判断] 检测到显著掩码、多实例或低面积占比，分类为: prop (道具)")
         elif num_instances == 1 and area_ratio > 0.5 and bg_score == "low":
             asset_type = "prop"
+            print(f"   [判断] 检测到高质量单体目标且背景分值较低，分类为: prop (道具)")
         else:
             asset_type = "scene"
+            print(f"   [判断] 未符合人体或道具特征，默认分类为: scene (场景)")
 
     # backend 选择
     signals_incomplete = False
     if forced_backend != "auto":
         backend_selected = forced_backend
+        print(f"   [决策] 用户强制使用后端: {backend_selected}")
     elif asset_type == "human":
         backend_selected = "sam3d_body"
+        print(f"   [判断] 资产类型为人体，自动匹配后端: sam3d_body")
     elif asset_type == "scene":
         backend_selected = "trellis2"
+        print(f"   [判断] 资产类型为场景，自动匹配后端: trellis2")
     else:
         prop_required = ["has_mask", "num_instances", "area_ratio", "bg_score"]
         signals_incomplete = _signals_incomplete(signals, prop_required)
         if forced_asset_type == "prop" and signals_incomplete:
             backend_selected = "trellis2"
+            print(f"   [判断] 道具特征信号不全，降级使用通用后端: trellis2")
         elif signals.get("num_instances", 1) > 1 or signals.get("area_ratio", 0) <= 0.5:
             backend_selected = "sam3d_objects"
+            print(f"   [判断] 检测到复杂多目标或小面积目标，选择后端: sam3d_objects")
         else:
             backend_selected = "trellis2"
+            print(f"   [判断] 检测到标准单体目标，选择高保真后端: trellis2")
+
+    return asset_type, backend_selected, signals_incomplete
 
     return asset_type, backend_selected, signals_incomplete
 
@@ -247,7 +260,7 @@ def main():
 
     input_path = os.path.abspath(args.input)
     if not os.path.exists(input_path):
-        print(f"Error: Input file {input_path} not found.")
+        print(f"错误: 输入文件 {input_path} 不存在。")
         return
 
     session_id = os.path.splitext(os.path.basename(input_path))[0]
@@ -264,13 +277,30 @@ def main():
         sys_argv=sys.argv
     )
 
-    print(f"🎬 Starting Pipeline for Asset: {session_id}")
-    print(f"📂 Output Directory: {output_dir}")
+    print(f"\n" + "="*60)
+    print(f"🎬 [电影资产化自动化管线] 任务启动")
+    print(f"任务 ID   : {session_id}")
+    print(f"输入路径 : {input_path}")
+    print(f"工作目录 : {output_dir}")
+    print("="*60)
+    
+    print("\n📜 [任务目标与流程总览]")
+    print(f"本项目旨在将 2D 电影素材转换为工业级 3D 资产。当前任务计划如下：")
+    steps_plan = []
+    if not args.skip_scene: steps_plan.append("1. 场景扩展 (ml-sharp): 补全图像边缘，为光照分析提供完整参考。")
+    if not args.skip_geometry: steps_plan.append("2. 几何重建 (DUSt3R): 恢复场景全局空间几何与深度关系。")
+    steps_plan.append("3. 光照估算 (Lighting): 提取环境光照探针，确保生成的 3D 资产色彩融入一致。")
+    steps_plan.append("4. 资产采集 (Harvester): 利用 SAM 自动识别并重光照提取前景物体。")
+    steps_plan.append("5. 3D 核心生成: 根据物体特征选择最优 AI 后端（TRELLIS.2/SAM3D）生成模型。")
+    steps_plan.append("6. 工业标准标准化: 按照 GB/T 36369 封装并执行 DCC (Blender) 导入校验。")
+    for s in steps_plan: print(f"   {s}")
+    print("-" * 60)
 
     # 1. Scene Gen
     scene_run_logs = []
     if not args.skip_scene:
-        scene_result = runner.run("Scene Generation (ml-sharp)", "scene_gen",
+        print(f"\n[节点 1: 场景扩展] 正在通过 AI 补全画面边缘，构建更完整的光照参考环境...")
+        scene_result = runner.run("场景扩展生成 (ml-sharp)", "scene_gen",
                                   ["--input-path", input_path, "--output-path", os.path.join(output_dir, "scene_visual")],
                                   ENVS["sharp"],
                                   extra_env={"PYTHONPATH": "modules/ml-sharp/src"},
@@ -278,12 +308,17 @@ def main():
                                   step_id="scene_gen",
                                   asset_id="scene_001")
         scene_run_logs.extend(_collect_run_log_paths(scene_result))
+        if scene_result.success:
+            print(f"✅ [结论] 场景扩展完成。")
+        else:
+            print(f"⚠️ [结论] 场景扩展异常，管线将尝试在降级模式下继续执行。")
     else:
-        print("⏭️ Skipping Scene Generation")
+        print("⏭️ 跳过场景生成步骤 (skip_scene)")
 
     # 2. Geometry
-    if not args.skip_geometry and not args.skip_scene:  # Added condition based on CLI arg semantics
-        geometry_result = runner.run("Geometry Reconstruction (DUSt3R)", "geometry",
+    if not args.skip_geometry and not args.skip_scene:
+        print(f"\n[节点 2: 空间几何重建] 正在分析场景深度与 3D 关联，点云恢复中...")
+        geometry_result = runner.run("空间几何重建 (DUSt3R)", "geometry",
                                      ["--input", input_path, "--output", os.path.join(output_dir, "dust3r")],
                                      ENVS["dust3r"],
                                      extra_env={"PYTHONPATH": "modules/dust3r"},
@@ -291,25 +326,33 @@ def main():
                                      step_id="geometry",
                                      asset_id="scene_001")
         scene_run_logs.extend(_collect_run_log_paths(geometry_result))
+        if geometry_result.success:
+            print(f"✅ [结论] 空间几何关联已确立。")
+        else:
+            print(f"⚠️ [结论] 几何重建失败，可能会影响后续资产的缩放准确度。")
     else:
-        print("⏭️ Skipping Geometry")
+        print("⏭️ 跳过几何重建周期 (skip_geometry)")
 
     # 3. Lighting
+    print(f"\n[节点 3: 光照估计] 正在提取画面中的 HDR 环境特征，用于资产重光照一致性...")
     scene_visual_dir = os.path.join(output_dir, "scene_visual")
     potential_plys = glob.glob(os.path.join(scene_visual_dir, "**", "*.ply"), recursive=True)
     potential_ply = potential_plys[0] if potential_plys else None
 
     lighting_json = os.path.join(output_dir, "lighting_probe.json")
     if potential_ply:
-        lighting_result = runner.run("Lighting Estimation", "lighting",
+        lighting_result = runner.run("环境光照估算 (Lighting)", "lighting",
                                      ["--input", potential_ply, "--output", lighting_json],
                                      ENVS["base"],
                                      log_dir=logs_root,
                                      step_id="lighting",
                                      asset_id="scene_001")
         scene_run_logs.extend(_collect_run_log_paths(lighting_result))
+        print(f"✅ [结论] 环境光照特征提取成功。")
     else:
-        print(f"⚠️ No scene PLY found for lighting, using default.")
+        print(f"⚠️ [结论] 未找到场景点云 PLY 文件，光照分析降级使用默认值。")
+        with open(lighting_json, 'w') as f:
+            json.dump({"ambient_light": {"r": 1.0, "g": 1.0, "b": 1.0}}, f)
         with open(lighting_json, 'w') as f:
             json.dump({"ambient_light": {"r": 1.0, "g": 1.0, "b": 1.0}}, f)
 
@@ -352,6 +395,7 @@ def main():
         )
 
     # 4. Harvesting
+    print(f"\n[节点 4: 前景资产采集] 正在执行语义分割，识别画面中的关键资产目标并进行颜色校正...")
     harvest_args = [
         "--input", input_path,
         "--output_dir", os.path.join(output_dir, "props"),
@@ -363,7 +407,7 @@ def main():
         harvest_args.append("--disable_skin_rejection")
 
     harvest_result = runner.run(
-        "Asset Extraction & Relighting",
+        "资产掩码提取与重光照 (Harvester)",
         "harvest",
         harvest_args,
         ENVS["base"],
@@ -371,6 +415,11 @@ def main():
         step_id="harvest",
         asset_id="scene_001",
     )
+    if harvest_result.success:
+        print(f"✅ [结论] 资产采集与重光照预处理成功。")
+    else:
+        print(f"❌ [结论] 核心资产提取失败，管线关键节点中断。")
+        return
     manifest.append_asset_run_logs("scene_001", _collect_run_log_paths(harvest_result))
 
     # 5. Iterating Asset Manifest and Routing
@@ -383,7 +432,7 @@ def main():
         with open(harvest_manifest_path, 'r') as f:
             harvest_manifest = json.load(f)
 
-        print(f"🧩 Found {len(harvest_manifest)} props in manifest.")
+        print(f"🧩 采集清单加载完成，共发现 {len(harvest_manifest)} 个潜在资产目标。")
 
         for item in harvest_manifest:
             asset_id = item['id']
@@ -402,7 +451,7 @@ def main():
             unified_asset_dir = os.path.join(output_dir, "assets", f"{asset_type}_{asset_counters[asset_type]:03d}")
             os.makedirs(unified_asset_dir, exist_ok=True)
 
-            print(f"   Processing Asset ID: {asset_id} | Type: {asset_type} | Backend: {backend_selected}")
+            print(f"   >>> 正在处理资产: {asset_id} | 类型映射: {asset_type} | 选定后端: {backend_selected}")
 
             parameters_snapshot = {
                 "cli": {
@@ -438,7 +487,7 @@ def main():
             try:
                 if backend_selected == "trellis2":
                     run_result = runner.run(
-                        f"Hero Asset Gen ({asset_id})",
+                        f"高保真 3D 资产生成 ({asset_id})",
                         "trellis2",
                         ["--input", relit_file, "--output", unified_asset_dir],
                         ENVS["trellis2"],
@@ -449,7 +498,7 @@ def main():
                     )
                 elif backend_selected == "sam3d_objects":
                     run_result = runner.run(
-                        f"Hero Asset Gen ({asset_id})",
+                        f"通用 3D 模型生成 ({asset_id})",
                         "sam3d_objects",
                         ["--input", relit_file, "--output", unified_asset_dir],
                         ENVS["sam3d_objects"],
@@ -460,7 +509,7 @@ def main():
                     )
                 elif backend_selected == "sam3d_body":
                     run_result = runner.run(
-                        f"Hero Asset Gen ({asset_id})",
+                        f"人体 3D 重建 ({asset_id})",
                         "sam3d_body",
                         ["--image", relit_file, "--output_dir", unified_asset_dir],
                         ENVS["base"],
@@ -469,13 +518,13 @@ def main():
                         asset_id=asset_id,
                     )
                 else:
-                    print(f"❌ Unknown asset_gen_backend: {backend_selected}")
+                    print(f"❌ 未识别的生成后端: {backend_selected}")
                     run_result = None
                 success = bool(run_result and run_result.success)
                 run_log_paths = _collect_run_log_paths(run_result)
                 manifest.append_asset_run_logs(asset_id, run_log_paths)
             except Exception as e:
-                print(f"❌ Exception in backend {backend_selected}: {e}")
+                print(f"❌ 后端执行异常 {backend_selected}: {e}")
 
             outputs = [relit_file]
             if not success:
@@ -530,7 +579,7 @@ def main():
             splat_path = os.path.join(unified_asset_dir, "splat.ply")
             if os.path.exists(splat_path):
                 pkg_success = runner.run(
-                    f"Standardization ({asset_id})", "package",
+                    f"资产规范化封装 (Packaging: {asset_id})", "package",
                     ["--input", splat_path, "--id", asset_id],
                     ENVS["base"],
                     log_dir=logs_root,
@@ -552,7 +601,7 @@ def main():
             primary_output = _select_primary_output(unified_asset_dir)
             import_check = {}
             if primary_output and primary_output.endswith("mesh.glb"):
-                print(f"   Testing GLB Import Compatibility for {asset_id}...")
+                print(f"   正在执行 DCC (Blender) 导入兼容性校验: {asset_id}...")
                 import_result = _run_glb_import_check(primary_output)
                 import_check = {
                     "import_ok": bool(import_result.get("import_ok")),
@@ -563,9 +612,9 @@ def main():
                 if import_result.get("returncode") is not None:
                     import_check["returncode"] = import_result["returncode"]
                 if import_check["import_ok"]:
-                    print("   ✅ Import Validation Passed.")
+                    print("   ✅ 导入校验通过。")
                 else:
-                    print(f"   ❌ Import Validation Failed: {import_check.get('error', 'unknown_error')}")
+                    print(f"   ❌ 导入校验失败: {import_check.get('error', 'unknown_error')}")
             else:
                 import_check = {
                     "skipped": True,
@@ -573,7 +622,7 @@ def main():
                 }
                 if primary_output:
                     import_check["selected_output"] = os.path.basename(primary_output)
-                print(f"   ⚠️ GLB missing; skipped Blender import check for {asset_id}.")
+                print(f"   ⚠️ GLB 文件缺失或降级为 PLY；已跳过 DCC 导入校验。")
 
             manifest.update_asset_fields(asset_id, {"import_check": import_check})
 
@@ -588,7 +637,7 @@ def main():
     # 6. Report
     manifest.save()
     report_result = runner.run(
-        "Report Generation", "report",
+        "可视化质量审核报告生成", "report",
         ["--output_root", output_dir, "--input_image", input_path],
         ENVS["base"],
         log_dir=logs_root,
@@ -597,7 +646,7 @@ def main():
     )
     manifest.append_asset_run_logs("scene_001", _collect_run_log_paths(report_result))
 
-    print(f"\n🔗 Report available at: {os.path.join(output_dir, 'report.html')}")
+    print(f"\n🔗 任务完成。审核报告已生成至: {os.path.join(output_dir, 'report.html')}")
 
 
 if __name__ == "__main__":
