@@ -13,7 +13,7 @@ CONDA_ROOT = "/home/zhangxin/miniconda3"
 ENVS = {
     "sharp": f"{CONDA_ROOT}/envs/sharp/bin/python",
     "dust3r": f"{CONDA_ROOT}/envs/dust3r/bin/python",
-    "trellis": f"{CONDA_ROOT}/envs/trellis2/bin/python",
+    "trellis2": f"{CONDA_ROOT}/envs/trellis2/bin/python",
     # Meta SAM 3D Objects (see modules/sam-3d-objects/doc/setup.md)
     "sam3d_objects": f"{CONDA_ROOT}/envs/sam3d-objects/bin/python",
     "base": sys.executable,
@@ -26,7 +26,7 @@ SCRIPTS = {
     "geometry": os.path.join(PROJECT_ROOT, "src/steps/geometry/run_dust3r_tiled.py"),
     "lighting": os.path.join(PROJECT_ROOT, "src/steps/lighting/estimate_lighting.py"),
     "harvest": os.path.join(PROJECT_ROOT, "src/steps/assets/harvest_hero_assets.py"),
-    "trellis": os.path.join(PROJECT_ROOT, "src/steps/assets/run_trellis_local.py"),
+    "trellis2": os.path.join(PROJECT_ROOT, "src/steps/assets/run_trellis2_local.py"),
     "sam3d_objects": os.path.join(PROJECT_ROOT, "src/steps/assets/run_sam3d_objects_local.py"),
     "sam3d_body": os.path.join(PROJECT_ROOT, "src/steps/assets/run_sam3d_body_local.py"),
     "package": os.path.join(PROJECT_ROOT, "src/steps/export/package_asset_gbt.py"),
@@ -41,7 +41,7 @@ def main():
     parser.add_argument("--skip_scene", action="store_true", help="Skip expensive scene generation")
     parser.add_argument(
         "--asset_gen_backend",
-        choices=["trellis", "sam3d_objects", "sam3d_body", "auto"],
+        choices=["trellis2", "sam3d_objects", "sam3d_body", "auto"],
         default="auto",
         help="3D asset generation backend for props (default: auto)",
     )
@@ -152,11 +152,11 @@ def main():
             backend = args.asset_gen_backend
             if backend == "auto":
                 if asset_type == "prop":
-                    backend = "trellis" if signals.get('num_instances', 1) == 1 else "sam3d_objects"
+                    backend = "trellis2" if signals.get('num_instances', 1) == 1 else "sam3d_objects"
                 elif asset_type == "human":
                     backend = "sam3d_body"
                 else:
-                    backend = "trellis"
+                    backend = "trellis2"
                     
             print(f"   Processing Asset ID: {asset_id} | Type: {asset_type} | Backend: {backend}")
             
@@ -177,12 +177,12 @@ def main():
             props_3d_dir = os.path.join(output_dir, "props_3d")
             success = False
             try:
-                if backend == "trellis":
+                if backend == "trellis2":
                     success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
-                        "trellis",
+                        "trellis2",
                         ["--input", relit_file, "--output", props_3d_dir],
-                        ENVS["trellis"],
+                        ENVS["trellis2"],
                         extra_env={"PYTHONPATH": "modules/TRELLIS.2", "ATTN_BACKEND": "naive"},
                     )
                 elif backend == "sam3d_objects":

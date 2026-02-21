@@ -5,13 +5,13 @@ import argparse
 from pathlib import Path
 from gradio_client import Client, handle_file
 
-def run_trellis_api(image_path, output_dir):
+def run_trellis2_api(image_path, output_dir):
     """
     Call TRELLIS HuggingFace Space API to generate 3D model.
     """
-    print(f"Initializing Client for 'trellis-community/TRELLIS'...")
+    print(f"Initializing Client for 'microsoft/TRELLIS.2'...")
     try:
-        client = Client("trellis-community/TRELLIS") # Public space usually doesn't need token
+        client = Client("microsoft/TRELLIS.2") # Public space usually doesn't need token
     except Exception as e:
         print(f"Error connecting to Space: {e}")
         return
@@ -26,7 +26,7 @@ def run_trellis_api(image_path, output_dir):
     
     start_time = time.time()
     
-    # Based on typical TRELLIS demo API structure:
+    # Based on typical TRELLIS.2 demo API structure:
     # It usually takes an image and some parameters.
     # We'll try the standard flow.
     try:
@@ -35,13 +35,13 @@ def run_trellis_api(image_path, output_dir):
         # Let's inspect the API first if this fails, but usually 'predict' works or checking `client.view_api()` could help.
         # For now we assume a standard image-to-3d fn.
         
-        # Looking at recent TRELLIS spaces, prompt structure is:
+        # Looking at recent TRELLIS.2 spaces, prompt structure is:
         # Image -> [preprocess] -> [generate] -> [assets]
         
         # We'll try the main predict endpoint. Use api_name explicitly if known, otherwise letting client guess is risky.
         # Let's try to verify API first? No, just run it. The user wants results.
         
-        # NOTE: Updated to match TRELLIS.2 or TRELLIS demo common parameters
+        # NOTE: Updated to match TRELLIS.2 demo common parameters
         # Input 0: Image
         # Input 1: Seed (int)
         # Input 2: SS Guidance (float)
@@ -119,7 +119,7 @@ def run_trellis_api(image_path, output_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", "-i", type=str, required=True, help="Input image path")
-    parser.add_argument("--output", "-o", type=str, default="outputs/trellis_api", help="Output directory")
+    parser.add_argument("--output", "-o", type=str, default="outputs/trellis2_api", help="Output directory")
     args = parser.parse_args()
     
-    run_trellis_api(args.input, args.output)
+    run_trellis2_api(args.input, args.output)

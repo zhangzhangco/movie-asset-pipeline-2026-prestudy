@@ -4,7 +4,7 @@
 
 ## 📋 项目概述
 
-这是一个**混合3D生成管线（Hybrid 3D Pipeline）**的技术验证项目，目标是将2D电影静帧/视频自动转换为可复用的3D数字资产。项目整合了多个前沿AI模型（ml-sharp, DUSt3R, TRELLIS, SAM 3D Objects），通过模块化编排实现端到端的资产生产流程。
+这是一个**混合3D生成管线（Hybrid 3D Pipeline）**的技术验证项目，目标是将2D电影静帧/视频自动转换为可复用的3D数字资产。项目整合了多个前沿AI模型（ml-sharp, DUSt3R, TRELLIS.2, SAM 3D Objects），通过模块化编排实现端到端的资产生产流程。
 
 **当前状态**: Phase 7 完成 - 技术验证阶段，已完成多条技术路线的实验对比
 
@@ -18,7 +18,7 @@
 - 状态: ✅ 可用
 
 **路线B: 单图道具生成**
-- TRELLIS (Image-to-3D): 直接从单张图生成3D模型
+- TRELLIS.2 (Image-to-3D): 直接从单张图生成3D模型
 - 适用场景: 独立道具快速生成
 - 状态: ✅ 生产就绪
 
@@ -56,7 +56,7 @@ bash scripts/setup_dust3r.sh
 
 ### 运行管线
 
-**基础用法 (TRELLIS后端)**:
+**基础用法 (TRELLIS.2后端)**:
 ```bash
 python pipeline_runner.py --input /path/to/image.png
 ```
@@ -103,7 +103,7 @@ preStudy/
 │   └── steps/               # 原子化能力单元
 │       ├── scene_gen/       # ml-sharp 场景生成
 │       ├── geometry/        # DUSt3R 几何重建
-│       ├── assets/          # TRELLIS/SAM3D + 道具提取
+│       ├── assets/          # TRELLIS.2/SAM3D + 道具提取
 │       ├── lighting/        # 光照探针提取
 │       ├── export/          # GB/T 36369 封装
 │       └── report/          # HTML报告生成
@@ -136,7 +136,7 @@ preStudy/
 ```mermaid
 graph LR
     A[输入图片] --> B{路由决策}
-    B -->|单图| C[Track A: TRELLIS/SAM3D]
+    B -->|单图| C[Track A: TRELLIS.2/SAM3D]
     B -->|场景| D[Track B: ml-sharp + DUSt3R]
     B -->|视频| E[Track C: COLMAP + 3DGS]
     C --> F[工业规范化]
@@ -161,7 +161,8 @@ graph LR
 
 **常见问题**:
 
-1. **TRELLIS确保使用 `spconv-cu118`，参考 `scripts/download_trellis.py`
+1. **TRELLIS.2 环境与模型问题**:
+   * 确保使用正确的环境和后处理配置。依赖下载参考 `scripts/download_trellis2.py`（或类似脚本）。
 2. **道具提取失败**: 调整 `harvest_hero_assets.py` 中的ROI阈值，或使用 `--roi_hint` 手动指定
 3. **显存不足**: 使用 `--skip_scene` 跳过耗显存的场景生成步骤
 4. **SAM3D模型缺失**: 参考 `scripts/setup_sam3d_objects.md`

@@ -2,7 +2,7 @@
 import json
 import os
 
-model_dir = os.path.abspath("models/TRELLIS-image-large")
+model_dir = os.path.abspath("models/TRELLIS.2-4B")
 json_path = os.path.join(model_dir, "pipeline.json")
 
 if not os.path.exists(json_path):
