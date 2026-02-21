@@ -1,3 +1,11 @@
+"""
+Movie Assetization Pipeline 主编排脚本
+Author: zhangxin
+功能：负责跨 Conda 环境调度场景生成、几何重建、资产提取、标准封装和报告生成。
+输入：2D 电影静帧或视频路径。
+输出：规范化的 3D 资产及其元数据清单。
+依赖：Nerfstudio, 3DGS, DUSt3R, TRELLIS 等多环境依赖。
+"""
 import os
 import argparse
 import subprocess

@@ -1,3 +1,11 @@
+"""
+Blender 资产导入校验脚本
+Author: zhangxin
+功能：在后台启动 Blender 尝试导入生成的 GLB/PLY 资产，检测几何完整性并提取顶点、面数等统计信息。
+输入：3D 资产文件路径。
+输出：标准输出中的 JSON 校验结果。
+依赖：Blender Python API (bpy)。
+"""
 import sys
 import json
 import bpy

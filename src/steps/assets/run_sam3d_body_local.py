@@ -1,3 +1,11 @@
+"""
+SAM 3D Body (MHR) 资产生成后端
+Author: zhangxin
+功能：将提取的人体图像转换为 3D 角色模型，支持失败现场捕获和元数据导出。
+输入：包含人体的图像及可选的掩码。
+输出：人体网格 (mesh.obj) 与相应的参数配置。
+依赖：PyTorch, SAM, MHR（当前为模拟实现）。
+"""
 import os
 import argparse
 import sys

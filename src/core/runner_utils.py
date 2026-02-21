@@ -1,3 +1,11 @@
+"""
+管线运行通用工具库
+Author: zhangxin
+功能：包含 SHA-256 计算、Git 提交记录提取、Python 运行时信息收集以及 Manifest 清单管理类。
+输入：文件路径、资产 ID、运行状态信息。
+输出：更新后的 JSON 清单文件及运行环境摘要。
+依赖：Python 标准库、PyTorch（可选，用于版本检测）。
+"""
 import os
 import subprocess
 import time
