@@ -131,6 +131,11 @@ def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6, roi_hint=None, 
     
     # 模拟判断是否有人的信号
     has_person_signal = len(faces) > 0
+    has_mask_signal = cv2.countNonZero(mask2) > 0
+
+    # 简化背景复杂度评分：前景面积越大，背景越复杂（分数越高）
+    fg_ratio = cv2.countNonZero(mask2) / float(w * h)
+    bg_score = "low" if fg_ratio > 0.5 else "high"
     
     if len(valid_contours) > 1:
         print(f"✂️  Auto-Split: Detected {len(valid_contours)} separate objects. Splitting...")
@@ -175,6 +180,8 @@ def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6, roi_hint=None, 
                     "area_ratio": area_ratio,
                     "has_person": has_person_signal,
                     "num_instances": len(valid_contours),
+                    "has_mask": has_mask_signal,
+                    "bg_score": bg_score,
                     "preview": preview_path
                 }
             })
@@ -205,6 +212,8 @@ def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6, roi_hint=None, 
                 "area_ratio": round(area / (w * h), 3),
                 "has_person": has_person_signal,
                 "num_instances": 1,
+                "has_mask": has_mask_signal,
+                "bg_score": bg_score,
                 "preview": preview_path
             }
         })

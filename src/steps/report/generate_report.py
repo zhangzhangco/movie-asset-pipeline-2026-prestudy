@@ -322,7 +322,7 @@ def generate_report(output_dir):
             signals = asset_info.get("signals", {})
             status = asset_info.get("status", "unknown")
             asset_type = asset_info.get("asset_type", "prop")
-            backend = asset_info.get("backend", "unknown")
+            backend = asset_info.get("backend_selected", asset_info.get("backend", "unknown"))
             import_valid = asset_info.get("import_valid", "N/A")
             
             # Paths relative to report.html
