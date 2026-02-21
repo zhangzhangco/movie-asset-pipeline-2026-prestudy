@@ -6,6 +6,7 @@ import sys
 import time
 import json
 import glob
+import shutil
 
 # Configuration: Conda Environment Paths
 CONDA_ROOT = "/home/zhangxin/miniconda3"
@@ -27,8 +28,10 @@ SCRIPTS = {
     "harvest": os.path.join(PROJECT_ROOT, "src/steps/assets/harvest_hero_assets.py"),
     "trellis": os.path.join(PROJECT_ROOT, "src/steps/assets/run_trellis_local.py"),
     "sam3d_objects": os.path.join(PROJECT_ROOT, "src/steps/assets/run_sam3d_objects_local.py"),
+    "sam3d_body": os.path.join(PROJECT_ROOT, "src/steps/assets/run_sam3d_body_local.py"),
     "package": os.path.join(PROJECT_ROOT, "src/steps/export/package_asset_gbt.py"),
     "report": os.path.join(PROJECT_ROOT, "src/steps/report/generate_report.py"),
+    "check_import": os.path.join(PROJECT_ROOT, "scripts/check_import.py"),
 }
 
 def run_step(name, script_key, args, env_python, extra_env=None):
@@ -74,9 +77,15 @@ def main():
     parser.add_argument("--skip_scene", action="store_true", help="Skip expensive scene generation")
     parser.add_argument(
         "--asset_gen_backend",
-        choices=["trellis", "sam3d_objects"],
-        default="trellis",
-        help="3D asset generation backend for props (default: trellis)",
+        choices=["trellis", "sam3d_objects", "sam3d_body", "auto"],
+        default="auto",
+        help="3D asset generation backend for props (default: auto)",
+    )
+    parser.add_argument(
+        "--asset_type",
+        choices=["prop", "human", "scene", "auto"],
+        default="auto",
+        help="Override asset type classification",
     )
     parser.add_argument("--skip_geometry", action="store_true", help="Skip DUSt3R geometry reconstruction")
     parser.add_argument("--roi_hint", type=str, default=None, help="Hint bounding box for prop extraction, format 'x,y,w,h'")
@@ -88,9 +97,32 @@ def main():
         print(f"Error: Input file {input_path} not found.")
         return
 
+    import sys
+
+
     session_id = os.path.splitext(os.path.basename(input_path))[0]
     output_dir = os.path.join(args.output_root, session_id)
     os.makedirs(output_dir, exist_ok=True)
+    
+    # 0. Initialize Global Manifest
+    global_manifest_path = os.path.join(output_dir, "manifest.json")
+    global_manifest = {
+        "session_id": session_id,
+        "inputs": {
+            "image": input_path
+        },
+        "meta": {
+            "pipeline_version": "1.3.1",
+            "command": " ".join(sys.argv)
+        },
+        "assets": []
+    }
+    
+    def save_global_manifest():
+        with open(global_manifest_path, 'w', encoding='utf-8') as f:
+            json.dump(global_manifest, f, indent=4, ensure_ascii=False)
+            
+    save_global_manifest()
     
     print(f"🎬 Starting Pipeline for Asset: {session_id}")
     print(f"📂 Output Directory: {output_dir}")
@@ -147,59 +179,149 @@ def main():
              harvest_args,
              ENVS["base"])
 
-    # 5. TRELLIS Gen (Iterate over all extracted props in Manifest)
+    # 5. Iterating Asset Manifest and Routing
     prop_dir = os.path.join(output_dir, "props")
-    manifest_path = os.path.join(prop_dir, "harvest_manifest.json")
+    harvest_manifest_path = os.path.join(prop_dir, "harvest_manifest.json")
     
-    if os.path.exists(manifest_path):
-        with open(manifest_path, 'r') as f:
-            manifest = json.load(f)
+    if os.path.exists(harvest_manifest_path):
+        with open(harvest_manifest_path, 'r') as f:
+            harvest_manifest = json.load(f)
             
-        print(f"🧩 Found {len(manifest)} props in manifest.")
+        print(f"🧩 Found {len(harvest_manifest)} props in manifest.")
         
-        for item in manifest:
+        for item in harvest_manifest:
             asset_id = item['id']
             relit_file = item['path'] # Absolute path from harvester
             asset_name = os.path.basename(relit_file)
+            signals = item.get('signals', {})
             
-            print(f"   Processing Asset ID: {asset_id}")
+            # --- Routing Logic ---
+            # 1. Determine Asset Type
+            asset_type = args.asset_type
+            if asset_type == "auto":
+                if signals.get('has_person'):
+                    asset_type = "human"
+                elif signals.get('area_ratio', 0) > 0.8:
+                    asset_type = "scene"
+                else:
+                    asset_type = "prop"
+                    
+            # 2. Determine Backend
+            backend = args.asset_gen_backend
+            if backend == "auto":
+                if asset_type == "prop":
+                    backend = "trellis" if signals.get('num_instances', 1) == 1 else "sam3d_objects"
+                elif asset_type == "human":
+                    backend = "sam3d_body"
+                else:
+                    backend = "trellis"
+                    
+            print(f"   Processing Asset ID: {asset_id} | Type: {asset_type} | Backend: {backend}")
+            
+            # Record in global manifest
+            asset_record = {
+                "asset_id": asset_id,
+                "asset_type": asset_type,
+                "backend": backend,
+                "status": "processing",
+                "signals": signals,
+                "artifacts": {
+                    "source_image": relit_file
+                }
+            }
+            global_manifest["assets"].append(asset_record)
+            save_global_manifest()
             
             # Run 3D Gen backend
             props_3d_dir = os.path.join(output_dir, "props_3d")
-            if args.asset_gen_backend == "trellis":
-                run_step(
-                    f"Hero Asset Gen ({asset_id})",
-                    "trellis",
-                    ["--input", relit_file, "--output", props_3d_dir],
-                    ENVS["trellis"],
-                    extra_env={"PYTHONPATH": "modules/TRELLIS", "ATTN_BACKEND": "naive"},
-                )
-            elif args.asset_gen_backend == "sam3d_objects":
-                run_step(
-                    f"Hero Asset Gen ({asset_id})",
-                    "sam3d_objects",
-                    ["--input", relit_file, "--output", props_3d_dir],
-                    ENVS["sam3d_objects"],
-                    extra_env={"PYTHONPATH": "modules/sam-3d-objects"},
-                )
-            else:
-                raise ValueError(f"Unknown asset_gen_backend: {args.asset_gen_backend}")
-            
+            success = False
+            try:
+                if backend == "trellis":
+                    success = run_step(
+                        f"Hero Asset Gen ({asset_id})",
+                        "trellis",
+                        ["--input", relit_file, "--output", props_3d_dir],
+                        ENVS["trellis"],
+                        extra_env={"PYTHONPATH": "modules/TRELLIS", "ATTN_BACKEND": "naive"},
+                    )
+                elif backend == "sam3d_objects":
+                    success = run_step(
+                        f"Hero Asset Gen ({asset_id})",
+                        "sam3d_objects",
+                        ["--input", relit_file, "--output", props_3d_dir],
+                        ENVS["sam3d_objects"],
+                        extra_env={"PYTHONPATH": "modules/sam-3d-objects"},
+                    )
+                elif backend == "sam3d_body":
+                    success = run_step(
+                        f"Hero Asset Gen ({asset_id})",
+                        "sam3d_body",
+                        ["--image", relit_file, "--output_dir", props_3d_dir],
+                        ENVS["base"]
+                    )
+                else:
+                    print(f"❌ Unknown asset_gen_backend: {backend}")
+                    success = False
+            except Exception as e:
+                print(f"❌ Exception in backend {backend}: {e}")
+                success = False
+
+            if not success:
+                asset_record["status"] = "failed"
+                asset_record["error"] = {"type": "BackendExecutionError", "message": f"{backend} failed to run"}
+                save_global_manifest()
+                continue
+                
             # Run Export
-            # Output name is derived from input stem logic in the backend script
             ply_name = os.path.splitext(os.path.basename(relit_file))[0] + ".ply"
             ply_path = os.path.join(props_3d_dir, ply_name)
             
             if os.path.exists(ply_path):
-                # asset_id already has _relit stripped? Not necessarily.
-                # Harvester asset_id: prop_2026...
-                # path: prop_2026..._relit.png
-                # Let's trust the 'id' from manifest as the canonical ID.
-                run_step(f"Standardization ({asset_id})", "package",
+                # Update global manifest
+                asset_record["artifacts"]["raw_model"] = ply_path
+                
+                pkg_success = run_step(f"Standardization ({asset_id})", "package",
                          ["--input", ply_path, "--id", asset_id],
                          ENVS["base"])
+                         
+                if pkg_success:
+                    asset_record["status"] = "success"
+                else:
+                    asset_record["status"] = "failed"
+                    asset_record["error"] = {"type": "PackagingError", "message": "Standardization failed"}
+            
+                # Check Import (Blender Headless)
+                blender_cmd = shutil.which("blender")
+                if blender_cmd:
+                    print(f"   Testing DCC Compatibility for {asset_id}...")
+                    try:
+                        subprocess.run(
+                            [blender_cmd, "-b", "-P", SCRIPTS["check_import"], "--", ply_path],
+                            check=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE
+                        )
+                        asset_record["import_valid"] = True
+                        print(f"   ✅ Import Validation Passed.")
+                    except subprocess.CalledProcessError as e:
+                        asset_record["import_valid"] = False
+                        print(f"   ❌ Import Validation Failed: {e.stderr.decode('utf-8')[:200]}")
+                else:
+                    print(f"   ⚠️ Blender not found in PATH, skipping import validation.")
+                    asset_record["import_valid"] = "N/A"
+            else:
+                 if backend != "sam3d_body":
+                     asset_record["status"] = "failed"
+                     asset_record["error"] = {"type": "OutputMissingError", "message": f"Expected 3D model not found at {ply_path}"}
+                 else:
+                     asset_record["status"] = "success"
+
+            save_global_manifest()
     else:
         print("❌ No harvest manifest found. Skipping Generation.")
+        
+    # Finalize Global Manifest
+    save_global_manifest()
 
     # 6. Report
     run_step("Report Generation", "report",

@@ -75,6 +75,15 @@ def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6, roi_hint=None, 
 
     print(f"Applying Intelligent Extraction (GrabCut) on ROI: {rect}...")
     
+    # === Evidence Preview ===
+    preview_img = img.copy()
+    cv2.rectangle(preview_img, (rect[0], rect[1]), (rect[0]+rect[2], rect[1]+rect[3]), (0, 255, 0), 2)
+    for (fx, fy, fw, fh) in faces:
+        cv2.rectangle(preview_img, (fx, fy), (fx+fw, fy+fh), (255, 0, 0), 2)
+    preview_path = os.path.join(output_dir, "roi_preview.png")
+    cv2.imwrite(preview_path, preview_img)
+    print(f"📸 Saved Evidence Preview (ROI): {preview_path}")
+    
     mask = np.zeros(img.shape[:2], np.uint8)
     bgdModel = np.zeros((1, 65), np.float64)
     fgdModel = np.zeros((1, 65), np.float64)
@@ -120,6 +129,9 @@ def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6, roi_hint=None, 
     # Filter small noise
     valid_contours = [c for c in contours if cv2.contourArea(c) > (w * h * 0.05)]
     
+    # 模拟判断是否有人的信号
+    has_person_signal = len(faces) > 0
+    
     if len(valid_contours) > 1:
         print(f"✂️  Auto-Split: Detected {len(valid_contours)} separate objects. Splitting...")
         
@@ -153,7 +165,19 @@ def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6, roi_hint=None, 
             out_path = os.path.join(output_dir, f"{asset_id}.png")
             cv2.imwrite(out_path, cv2.cvtColor(final_crop, cv2.COLOR_RGBA2BGRA))
             print(f"   -> Saved Part {i+1}: {out_path}")
-            saved_assets.append((out_path, asset_id))
+            
+            # Generate Signals
+            area_ratio = round(cv2.contourArea(cnt) / (w * h), 3)
+            saved_assets.append({
+                "path": out_path,
+                "id": asset_id,
+                "signals": {
+                    "area_ratio": area_ratio,
+                    "has_person": has_person_signal,
+                    "num_instances": len(valid_contours),
+                    "preview": preview_path
+                }
+            })
             
     else:
         # Fallback to single object logic (bounding rect of all mask)
@@ -171,7 +195,19 @@ def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6, roi_hint=None, 
         out_path = os.path.join(output_dir, f"{asset_id}.png")
         cv2.imwrite(out_path, cv2.cvtColor(cropped_rgba, cv2.COLOR_RGBA2BGRA))
         print(f"Harvested Asset: {out_path}")
-        saved_assets.append((out_path, asset_id))
+        
+        # Determine Area
+        area = cv2.countNonZero(mask2)
+        saved_assets.append({
+            "path": out_path,
+            "id": asset_id,
+            "signals": {
+                "area_ratio": round(area / (w * h), 3),
+                "has_person": has_person_signal,
+                "num_instances": 1,
+                "preview": preview_path
+            }
+        })
 
     return saved_assets
 
@@ -262,7 +298,11 @@ if __name__ == "__main__":
     # Create valid manifest list
     manifest_list = []
 
-    for prop_path, asset_id in saved_assets:
+    for asset_dict in saved_assets:
+        prop_path = asset_dict["path"]
+        asset_id = asset_dict["id"]
+        signals = asset_dict.get("signals", {})
+        
         # 2. Relighting (Color Consistency)
         final_prop_path = prop_path
         if args.lighting_probe:
@@ -276,7 +316,8 @@ if __name__ == "__main__":
             "id": asset_id,
             "path": final_prop_path,
             "raw_path": prop_path,
-            "articulation": articulation_data  # <--- The Key "Dynamic" Data
+            "articulation": articulation_data,  # <--- The Key "Dynamic" Data
+            "signals": signals                  # <--- Pipeline Routing Signals
         })
         
         # Create Individual GBT Metadata (Legacy support)
