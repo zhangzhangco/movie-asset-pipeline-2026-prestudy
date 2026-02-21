@@ -13,6 +13,16 @@ Follow upstream instructions (recommended):
 Expected env name used by `pipeline_runner.py`:
 - `sam3d-objects`
 
+**⚠️ 环境配置核心要点 (CRITICAL Requirements):**
+- Python 3.11.0
+- PyTorch 2.5.1 + CUDA 12.1
+- Kaolin 0.17.0 (必须与 PyTorch/CUDA 版本对应匹配)
+- PyTorch3D 0.7.8
+- `utils3d == 0.0.2` (**致命陷阱**: 必须来自 MoGe 依赖包的 0.0.2 版本，**绝对不要**安装 PyPI 上其他同名包或 GitHub 的 v1.6)
+- 硬件要求：至少需要 32GB+ 显存的 GPU (推荐 RTX A6000 48GB 等级别)
+
+
+
 ## 2) Download checkpoints (HuggingFace gated)
 
 Upstream requires access to:

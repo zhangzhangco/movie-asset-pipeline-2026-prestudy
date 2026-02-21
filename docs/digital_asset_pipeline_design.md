@@ -1,153 +1,96 @@
 # 2026 电影级数字资产导入管线设计方案
 # (Digital Asset Import Pipeline Design 2026)
 
-**版本**: 1.1 (Enhanced Draft)
+**版本**: 1.2 (SOP-Aligned)
 **作者**: zhangxin
-**日期**: 2026-01-30
+**日期**: 2026-02-05
 
 ---
 
 ## 1. 设计概述 (Executive Summary)
 
-为了支撑 "Hybrid 3D Pipeline" (混合 3D 生产线)，并实现**“电影数字资产智能处理中心”**的愿景，本方案旨在建立一套集**摄取、路由、生产、管理**于一体的自动化管线。
+本方案旨在建立一套集**摄取、路由、生产、管理**于一体的自动化资产处理体系。根据最新的实验验证（2026.02），我们将管线逻辑从单纯的“素材分类”升级为**“交付能级路由” (Delivery-Tier Routing)**。
 
-核心理念：**"顺便" (Incidental Intelligence)** —— 在完成基础资产转化的同时，利用已有的 AI 算力自动产出材质、代理、元数据和合规报告。
+核心原则：**“按需路由，标准封装”**。利用 AI 感知能力自动分发至**敏捷管线 (Agile)** 或 **沉浸管线 (Immersive)**。
 
 ## 2. 目录结构设计 (Directory Structure)
 
-采用 **"流式处理 + 多维库式管理"** 结构。
+保持一致的**“流式处理”**结构：
 
 ```text
 /home/zhangxin/2026Projects/preStudy/
 ├── assets/
-│   ├── 00_Inbox/                # [进件区] 拖入原始素材 (EXR/PNG)
-│   ├── 01_Staging/              # [工坊区] 流水线正在处理的任务
-│   │   ├── <AssetID>_Task/
-│   │   │   ├── input.exr
-│   │   │   ├── report.json      # [新增] 技术合规性报告
-│   │   │   ├── masks/ (SAM2)
-│   │   │   ├── dust3r_out/
-│   │   │   └── trellis_out/
+│   ├── 00_Inbox/                # [进件区] 挂载原始素材 (EXR/MP4/PNG)
+│   ├── 01_Staging/              # [工坊区] 任务执行空间
+│   │   ├── Agile_Tasks/         # Pipe A：快速重建任务
+│   │   └── Immersive_Tasks/     # Pipe B：3DGS 深度训练任务
 │   └── 02_Library/              # [资产库] 最终交付成品 (Read-Only)
-│       ├── Props/               # 道具库 (Object-Centric)
-│       │   └── <Category>/<AssetID>/
-│       │       ├── model_high.ply    # 高模 (Render)
-│       │       ├── model_proxy.fbx   # [新增] 低模代理 (Anim)
-│       │       └── ...
-│       ├── Scenes/              # 场景库 (Scene-Centric)
-│       ├── Materials/           # [新增] 材质库 (PBR Texture Sets)
-│       │   └── <Style>/<MatID>/
-│       │       ├── basecolor.png
-│       │       ├── normal.png
-│       │       ├── roughness.png
-│       │       └── material.mtlx     # MaterialX 标准描述
-│       └── References/          # [新增] 参考图库 (On-Set Refs)
-│           └── <Scene>/<Shot>/
+│       ├── Environment/         # 大尺度场景/底板 (3DGS)
+│       └── Props/               # 独立道具 (Mesh/GS)
 ```
 
 ## 3. 核心工作流 (Core Workflow)
 
-引入 **Branching DAG** (分支有向无环图) 以支持多类型资产分发。
+引入 **Dual-Track Branching** 以支持差异化能级生产。
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4f46e5', 'edgeLabelBackground':'#fef3c7', 'tertiaryColor': '#fffbec'}}}%%
 graph TD
     %% Nodes
     Inbox[📂 00_Inbox: 原始素材]
-    PreFlight{🛡️ 技术合规预检}
-    ErrorBin[❌ 错误归档]
-    
-    Identify{🤖 AI 语义路由\n(VLM + SAM2)}
+    PreFlight{🛡️ 合规预检\n(ACEScg/16bit)}
+    Identify{🤖 策略路由\n(SOP A/B Choice)}
     
     subgraph Staging_Zone [01_Staging: 智能工坊]
-        %% Track Definitions
-        TrackA[Track A: 场景重建\n(DUSt3R)]
-        TrackB[Track B: 道具生成\n(TRELLIS)]
-        TrackC[Track C: 材质生成\n(AI PBR Gen)]
-        TrackD[Track D: 现场参考\n(OCR/Logging)]
+        direction TB
+        subgraph TrackA [Track A: 敏捷生存 - Pipe A]
+            Agile_Spat[DUSt3R 几何对齐] --> Agile_Mesh[TRELLIS 拓扑生成]
+        end
         
-        %% Processing
-        LOD_Gen[📉 Auto Proxy\n(Decimation)]
-        Tag_Gen[🏷️ Semantic Tagging\n(VLM Enrichment)]
+        subgraph TrackB [Track B: 沉浸优化 - Pipe B]
+            Imm_SfM[GLOMAP 相机解算] --> Imm_Train[3DGS 深度训练\n30k Iters]
+        end
     end
     
-    Library[🏛️ 02_Library: 智能资产库]
+    QC{🔍 交付质检\n(DOIB Check)}
+    Library[🏛️ 02_Library: 资产库]
 
     %% Edges
     Inbox --> PreFlight
-    PreFlight -->|合规: ACEScg/16bit| Identify
-    PreFlight -->|违规: sRGB/8bit| ErrorBin
+    PreFlight -->|OK| Identify
     
-    Identify -->|物体 Object| TrackB
-    Identify -->|场景 Scene| TrackA
-    Identify -->|纹理 Texture| TrackC
-    Identify -->|参考 Reference| TrackD
+    Identify -->|快周转/单图| TrackA
+    Identify -->|高保真/视频| TrackB
     
-    TrackA --> LOD_Gen
-    TrackB --> LOD_Gen
+    TrackA --> QC
+    TrackB --> QC
     
-    LOD_Gen --> Tag_Gen
-    TrackC --> Tag_Gen
-    
-    Tag_Gen --> Packager[📦 USD Packaging\n(GB/T 36369 ID)]
+    QC -->|Pass| Packager[📦 USD/MTS 封装]
     Packager --> Library
 ```
 
 ## 4. 关键组件增强 (Component Enhancements)
 
-### 4.1 技术合规预检 (Pre-flight Check)
-*   **位置**: `ingest_asset.py` 的第一步。
-*   **功能**: 使用 `OpenImageIO` 检查文件头。
-    *   色彩空间: 必须为 Linear (ACEScg/Rec.709-Linear)。
-    *   位深: 必须 >= 16-bit Float (EXR) 或 16-bit Int (EXR/PNG for Masks)。
-    *   分辨率: 必须 >= 2K。
-*   **动作**: 失败则重命名文件 (`_INVALID_COLOR.exr`) 并终止流程。
+### 4.1 动态深度训练 (Immersive Track B)
+*   **训练引擎**: Vanilla 3DGS。
+*   **优化策略**: 针对 2026.02 提出的“抽帧加密”策略，进件脚本将根据视频时长自动计算最优采样率（目标：Interval 2-5）。
+*   **监控**: 集成 Tensorboard 导出，实时跟踪平滑度指标。
 
-### 4.2 智能路由与元数据 (Router & Semantic Metadata)
-*   **功能**: 集成 VLM (视觉大模型) 进行深度理解。
-*   **元数据标准升级**:
-```json
-{
-  "identifiers": {
-    "local_id": "prop_20260130_ae3f",
-    "gbt_36369_id": "10.5000.1/CN.FILM.ASSET.2026.0001",  // GB/T 36369 电影数字对象标识符
-    "iso_26324_doi": "10.xxxxx/xxxx"                       // ISO 26324 兼容
-  },
-  "type": "PROP",
-  "tags": {
-    "visual_style": ["Cyberpunk", "Distressed"],
-    "material_inference": ["Rusty Metal", "Painted Plastic"],
-    "mood": ["Gloomy", "Industrial"]
-  },
-  "technical_compliance": {
-    "input_colorspace": "ACEScg",
-    "verified": true
-  },
-  "files": {
-    "high_poly": "model_high.ply",
-    "proxy": "model_proxy.fbx"
-  }
-}
-```
+### 4.2 智能路由选择 (Strategy Router)
+*   **逻辑**: 
+    *   单张/少视点图片 -> 默认 Track A。
+    *   大于 100 帧的连续序列 -> 建议 Track B。
+    *   Hero Prop 语义标签 -> 强制触发 Track A 的 Mesh 拓扑重构。
 
-### 4.3 自动化 LOD (Auto Proxy)
-*   **工具**: `meshlab` 或 `fast-simplification` 算法。
-*   **策略**:
-    *   **High**: 原始 3DGS 输出 (用于渲染)。
-    *   **Proxy**: 转换为 Mesh -> 减面至 5000 面 -> 烘焙简单的 Vertex Color (用于 Maya/Houdini 视窗操作)。
+### 4.3 自动化元数据 (MTS Generation)
+*   **DOIB 注入**: 在 `Packager` 阶段，通过调用 `digitial_object_id_api` 获取国家级唯一标识码。
+*   **MTS Sidecar**: 记录所有训练超参数（Iterations, Sampling Rate, Learning Rate）。
 
-## 5. 实施路线图 (Implementation Roadmap)
+## 5. 实施进度
 
-*   **Phase 1 (基础架构)**:
-    *   实现目录结构与基础 `ingest` 脚本 (含重命名逻辑)。
-    *   实现 Track B (Trellis) 的自动触发。
-*   **Phase 2 (合规与元数据)**:
-    *   集成 `OpenImageIO` 进行 Pre-flight。
-    *   定义 `metadata.json` 读写接口。
-*   **Phase 3 (扩展能力)**:
-    *   集成 VLM 进行语义打标。
-    *   开发 LOD 减面脚本。
-    *   开发 Texture -> MaterialX 转换节点。
+*   **P1 (Agile Entry)**: 封装 DUSt3R & TRELLIS (Done)。
+*   **P2 (Immersive Refinement)**: 建立基于 GLOMAP 的全自动训练脚本 (Active)。
+*   **P3 (Quality Gates)**: 实现基于 ACEScg 的自动化色彩空间转换与质检流程。
 
 ---
-*设计变更记录*: V1.1 版本采纳了用户关于 PBR、LOD、语义搜索、合规检查及参考库管理的建议，显著提升了管线的工业化潜力。
+*设计变更记录*: V1.2 版本将“资产类型驱动”调整为“交付目标驱动”，统一了设计方案与 SOP (V1.1) 的逻辑基准。

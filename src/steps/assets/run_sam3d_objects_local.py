@@ -91,6 +91,14 @@ def main():
     # Import their inference helper (they recommend sys.path.append('notebook'))
     sys.path.insert(0, str(notebook_dir))
 
+    # [CRITICAL] 必需的环境变量设置（规避 C++ 扩展编译崩溃与网络验证阻断）
+    os.environ["LIDRA_SKIP_INIT"] = "true"
+    os.environ["CUDA_HOME"] = os.environ.get("CONDA_PREFIX", "/usr/local/cuda")
+    
+    # 清除各种代理环境变量防止出现连接问题
+    for proxy_var in ["http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "all_proxy", "ALL_PROXY"]:
+        os.environ.pop(proxy_var, None)
+
     try:
         from inference import Inference  # type: ignore
     except Exception as e:

@@ -8,7 +8,7 @@ import json
 import uuid
 import datetime
 
-def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6):
+def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6, roi_hint=None, disable_skin_rejection=False):
     """
     Simulate automated harvesting using GrabCut.
     In production, this would be replaced by Segment Anything Model (SAM2).
@@ -30,37 +30,48 @@ def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.1, 4)
     
-    if len(faces) > 0:
-        # --- NEW LOGIC: Capture ALL characters + Context ---
-        print(f"👀 Detected {len(faces)} faces. Calculating Group ROI...")
-        
-        # 1. Find bounding box of ALL faces
-        min_x = min(f[0] for f in faces)
-        min_y = min(f[1] for f in faces)
-        max_x = max(f[0] + f[2] for f in faces)
-        max_y = max(f[1] + f[3] for f in faces)
-        
-        group_w = max_x - min_x
-        group_h = max_y - min_y
-        
-        # 2. Expand ROI to include bodies and environment (Car)
-        # Expand width by 100% (50% each side)
-        pad_x = int(group_w * 0.8) 
-        rx = max(0, min_x - pad_x)
-        rw = min(w - rx, group_w + 2 * pad_x)
-        
-        # Expand height: Top slightly, Bottom all the way
-        pad_top = int(group_h * 0.5)
-        ry = max(0, min_y - pad_top)
-        rh = min(h - ry, h - ry - 20) # Go to almost bottom
-        
-        rect = (rx, ry, rw, rh)
+    if roi_hint:
+        try:
+            rect = tuple(map(int, roi_hint.split(',')))
+            print(f"🎯 使用用户提供的 ROI Hint: {rect}")
+        except Exception as e:
+            print(f"⚠️ ROI Hint 解析失败 {roi_hint}，回退到自动推断: {e}")
+            rect = None
     else:
-        # Fallback: Widen ROI to 90% height, 80% width
-        print("👀 No face detected. Using Full-Body Center ROI.")
-        rw, rh = int(w * 0.8), int(h * 0.9)
-        rx, ry = (w - rw) // 2, (h - rh) // 2
-        rect = (rx, ry, rw, rh)
+        rect = None
+
+    if rect is None:
+        if len(faces) > 0:
+            # --- NEW LOGIC: Capture ALL characters + Context ---
+            print(f"👀 Detected {len(faces)} faces. Calculating Group ROI...")
+            
+            # 1. Find bounding box of ALL faces
+            min_x = min(f[0] for f in faces)
+            min_y = min(f[1] for f in faces)
+            max_x = max(f[0] + f[2] for f in faces)
+            max_y = max(f[1] + f[3] for f in faces)
+            
+            group_w = max_x - min_x
+            group_h = max_y - min_y
+            
+            # 2. Expand ROI to include bodies and environment (Car)
+            # Expand width by 100% (50% each side)
+            pad_x = int(group_w * 0.8) 
+            rx = max(0, min_x - pad_x)
+            rw = min(w - rx, group_w + 2 * pad_x)
+            
+            # Expand height: Top slightly, Bottom all the way
+            pad_top = int(group_h * 0.5)
+            ry = max(0, min_y - pad_top)
+            rh = min(h - ry, h - ry - 20) # Go to almost bottom
+            
+            rect = (rx, ry, rw, rh)
+        else:
+            # Fallback: Widen ROI to 90% height, 80% width
+            print("👀 No face detected. Using Full-Body Center ROI.")
+            rw, rh = int(w * 0.8), int(h * 0.9)
+            rx, ry = (w - rw) // 2, (h - rh) // 2
+            rect = (rx, ry, rw, rh)
 
     print(f"Applying Intelligent Extraction (GrabCut) on ROI: {rect}...")
     
@@ -68,8 +79,30 @@ def harvest_prop_grabcut(image_path, output_dir, rect_ratio=0.6):
     bgdModel = np.zeros((1, 65), np.float64)
     fgdModel = np.zeros((1, 65), np.float64)
     
-    # 5 iterations
+    # Initial pass with bounding rect
     cv2.grabCut(img, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+    
+    # 🛑 NEW FEATURE: Remove Hands (Skin Color Rejection)
+    if not disable_skin_rejection:
+        print("🖐 防粘连机制：执行肤色检测以剔除手部遮挡...")
+        img_ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+        # Generic skin tone ranges in YCrCb
+        lower_skin = np.array([0, 133, 77], dtype=np.uint8)
+        upper_skin = np.array([255, 173, 127], dtype=np.uint8)
+        skin_mask_raw = cv2.inRange(img_ycrcb, lower_skin, upper_skin)
+        
+        # Filter skin mask to only apply within the BBOX and foreground to avoid false positives in BG
+        fg_mask = np.where((mask == cv2.GC_FGD) | (mask == cv2.GC_PR_FGD), 1, 0).astype('uint8')
+        skin_in_fg = cv2.bitwise_and(skin_mask_raw, skin_mask_raw, mask=fg_mask)
+        
+        # Force localized skin pixels into "Sure Background"
+        if cv2.countNonZero(skin_in_fg) > 0:
+            mask[skin_in_fg == 255] = cv2.GC_BGD
+            print(f"   -> 剔除疑似手部/肤色像素: {cv2.countNonZero(skin_in_fg)} pixels")
+            # Run second pass GrabCut with the modified mask
+            cv2.grabCut(img, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_MASK)
+    else:
+        print("⏭️ 防粘连机制已关闭，跳过手部/肤色像素检测...")
     
     # Mask: 0/2 is BG, 1/3 is FG
     mask2 = np.where((mask==2)|(mask==0), 0, 1).astype('uint8')
@@ -219,10 +252,12 @@ if __name__ == "__main__":
     parser.add_argument("--input", required=True)
     parser.add_argument("--output_dir", default="outputs/harvested_props")
     parser.add_argument("--lighting_probe", help="Path to lighting_probe.json")
+    parser.add_argument("--roi_hint", type=str, help="Hint string in format 'x,y,w,h' to override automatic extraction.", default=None)
+    parser.add_argument("--disable_skin_rejection", action="store_true", help="Disable the skin color rejection mechanism (useful for animals or distinct backgrounds)")
     args = parser.parse_args()
     
     # 1. Extraction
-    saved_assets = harvest_prop_grabcut(args.input, args.output_dir)
+    saved_assets = harvest_prop_grabcut(args.input, args.output_dir, roi_hint=args.roi_hint, disable_skin_rejection=args.disable_skin_rejection)
     
     # Create valid manifest list
     manifest_list = []

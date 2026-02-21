@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600">
+    <defs>
+        <!-- Modern Gradients -->
+        <linearGradient id="flow1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+            <stop offset="100%" style="stop-color:#10b981;stop-opacity:0.8" />
+        </linearGradient>
+        <linearGradient id="flow2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:0.3" />
+            <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0.8" />
+        </linearGradient>
+        <linearGradient id="flow3" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#ec4899;stop-opacity:0.3" />
+            <stop offset="100%" style="stop-color:#6366f1;stop-opacity:0.8" />
+        </linearGradient>
+
+        <!-- Card Shadow -->
+        <filter id="card-shadow">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="4" />
+            <feOffset dx="0" dy="2" result="offsetblur" />
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.15" />
+            </feComponentTransfer>
+            <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+    </defs>
+
+    <!-- Background -->
+    <rect width="1000" height="600" fill="#ffffff" />
+
+    <!-- Title -->
+    <text x="500" y="45" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="24" text-anchor="middle"
+        fill="#0f172a" font-weight="300" letter-spacing="2">资产智能路由与分级供给</text>
+
+    <!-- ========== INPUT CARDS ========== -->
+    <g id="inputs">
+        <rect x="50" y="120" width="140" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0"
+            filter="url(#card-shadow)" />
+        <text x="120" y="150" text-anchor="middle" font-size="14" fill="#1e293b" font-weight="500">文本描述</text>
+        <text x="120" y="170" text-anchor="middle" font-size="11" fill="#64748b">剧本 / 分镜</text>
+
+        <rect x="50" y="220" width="140" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0"
+            filter="url(#card-shadow)" />
+        <text x="120" y="250" text-anchor="middle" font-size="14" fill="#1e293b" font-weight="500">概念图像</text>
+        <text x="120" y="270" text-anchor="middle" font-size="11" fill="#64748b">草图 / 参考</text>
+
+        <rect x="50" y="320" width="140" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0"
+            filter="url(#card-shadow)" />
+        <text x="120" y="350" text-anchor="middle" font-size="14" fill="#1e293b" font-weight="500">实物数据</text>
+        <text x="120" y="370" text-anchor="middle" font-size="11" fill="#64748b">扫描 / 采集</text>
+
+        <rect x="50" y="420" width="140" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0"
+            filter="url(#card-shadow)" />
+        <text x="120" y="450" text-anchor="middle" font-size="14" fill="#1e293b" font-weight="500">历史素材</text>
+        <text x="120" y="470" text-anchor="middle" font-size="11" fill="#64748b">老片 / 档案</text>
+    </g>
+
+    <!-- ========== ROUTING CORE (Minimal) ========== -->
+    <g id="core">
+        <rect x="300" y="100" width="400" height="420" rx="12" fill="#fafafa" stroke="#e5e7eb" />
+        <text x="500" y="135" text-anchor="middle" font-size="16" fill="#475569" font-weight="400">ARP 路由核心</text>
+
+        <!-- Processing Stages (Horizontal Flow) -->
+        <g transform="translate(330, 180)">
+            <rect width="100" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1" />
+            <text x="50" y="30" text-anchor="middle" font-size="12" fill="#1e40af">语义理解</text>
+        </g>
+
+        <g transform="translate(460, 180)">
+            <rect width="100" height="50" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" />
+            <text x="50" y="30" text-anchor="middle" font-size="12" fill="#92400e">模型生成</text>
+        </g>
+
+        <g transform="translate(590, 180)">
+            <rect width="80" height="50" rx="6" fill="#e0e7ff" stroke="#6366f1" stroke-width="1" />
+            <text x="40" y="30" text-anchor="middle" font-size="12" fill="#4338ca">优化</text>
+        </g>
+
+        <!-- Quality Router -->
+        <rect x="420" y="320" width="160" height="60" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5" />
+        <text x="500" y="345" text-anchor="middle" font-size="13" fill="#9a3412" font-weight="500">质量分级路由器</text>
+        <text x="500" y="365" text-anchor="middle" font-size="10" fill="#c2410c">根据需求自动分流</text>
+    </g>
+
+    <!-- ========== OUTPUT CARDS ========== -->
+    <g id="outputs">
+        <rect x="810" y="140" width="140" height="70" rx="6" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"
+            filter="url(#card-shadow)" />
+        <text x="880" y="170" text-anchor="middle" font-size="15" fill="#14532d" font-weight="500">草图级</text>
+        <text x="880" y="192" text-anchor="middle" font-size="11" fill="#15803d">创意预演 · 快速迭代</text>
+
+        <rect x="810" y="250" width="140" height="70" rx="6" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"
+            filter="url(#card-shadow)" />
+        <text x="880" y="280" text-anchor="middle" font-size="15" fill="#713f12" font-weight="500">置景级</text>
+        <text x="880" y="302" text-anchor="middle" font-size="11" fill="#a16207">虚拟拍摄 · 实时渲染</text>
+
+        <rect x="810" y="360" width="140" height="70" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"
+            filter="url(#card-shadow)" />
+        <text x="880" y="390" text-anchor="middle" font-size="15" fill="#5b21b6" font-weight="500">主演级</text>
+        <text x="880" y="412" text-anchor="middle" font-size="11" fill="#6d28d9">特写精度 · 物理仿真</text>
+    </g>
+
+    <!-- ========== FLOW PATHS (Smooth Curves) ========== -->
+    <!-- Path 1: Text -> Quick Draft -->
+    <path d="M 190 155 Q 250 155, 300 180" fill="none" stroke="url(#flow1)" stroke-width="3" opacity="0.6" />
+    <path d="M 700 205 Q 750 180, 810 180" fill="none" stroke="url(#flow1)" stroke-width="4" opacity="0.7" />
+
+    <!-- Path 2: Image -> Mid Quality -->
+    <path d="M 190 255 Q 250 255, 330 210" fill="none" stroke="url(#flow2)" stroke-width="3" opacity="0.6" />
+    <path d="M 670 205 Q 740 260, 810 300" fill="none" stroke="url(#flow2)" stroke-width="4" opacity="0.7" />
+
+    <!-- Path 3: Scan -> High Quality -->
+    <path d="M 190 355 Q 250 355, 330 230" fill="none" stroke="url(#flow3)" stroke-width="3" opacity="0.6" />
+    <path d="M 670 230 Q 740 350, 810 420" fill="none" stroke="url(#flow3)" stroke-width="4" opacity="0.7" />
+
+    <!-- Internal Flow -->
+    <path d="M 430 205 L 460 205" fill="none" stroke="#cbd5e1" stroke-width="2" />
+    <path d="M 560 205 L 590 205" fill="none" stroke="#cbd5e1" stroke-width="2" />
+    <path d="M 500 230 L 500 320" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,4" />
+
+</svg>

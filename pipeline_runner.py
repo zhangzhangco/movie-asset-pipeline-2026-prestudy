@@ -78,6 +78,9 @@ def main():
         default="trellis",
         help="3D asset generation backend for props (default: trellis)",
     )
+    parser.add_argument("--skip_geometry", action="store_true", help="Skip DUSt3R geometry reconstruction")
+    parser.add_argument("--roi_hint", type=str, default=None, help="Hint bounding box for prop extraction, format 'x,y,w,h'")
+    parser.add_argument("--disable_skin_rejection", action="store_true", help="Disable the skin color rejection mechanism")
     args = parser.parse_args()
 
     input_path = os.path.abspath(args.input)
@@ -130,8 +133,18 @@ def main():
             json.dump({"ambient_light": {"r":1.0, "g":1.0, "b":1.0}}, f)
 
     # 4. Harvesting
+    harvest_args = [
+        "--input", input_path,
+        "--output_dir", os.path.join(output_dir, "props"),
+        "--lighting_probe", lighting_json
+    ]
+    if args.roi_hint:
+        harvest_args.extend(["--roi_hint", args.roi_hint])
+    if args.disable_skin_rejection:
+        harvest_args.append("--disable_skin_rejection")
+
     run_step("Asset Extraction & Relighting", "harvest",
-             ["--input", input_path, "--output_dir", os.path.join(output_dir, "props"), "--lighting_probe", lighting_json],
+             harvest_args,
              ENVS["base"])
 
     # 5. TRELLIS Gen (Iterate over all extracted props in Manifest)

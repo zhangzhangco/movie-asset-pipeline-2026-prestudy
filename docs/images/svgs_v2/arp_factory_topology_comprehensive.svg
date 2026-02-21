@@ -1,0 +1,246 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+    <defs>
+        <!-- Gradients -->
+        <linearGradient id="bg-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#f8fafc;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#e2e8f0;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="header-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#334155;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="agent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+        </linearGradient>
+
+        <!-- Markers -->
+        <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+        </marker>
+        <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" />
+        </marker>
+    </defs>
+
+    <!-- Background -->
+    <rect width="1200" height="800" fill="url(#bg-grad)" />
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#cbd5e1" stroke-width="0.5" />
+    </pattern>
+    <rect width="1200" height="800" fill="url(#grid)" />
+
+    <!-- Title Top Bar -->
+    <rect width="1200" height="60" fill="url(#header-grad)" />
+    <text x="30" y="38" font-family="sans-serif" font-size="24" fill="white" font-weight="bold">国家电影数字资产平台 · 资产供给链全景拓扑图
+        (ARP Topology)</text>
+    <text x="1150" y="38" font-family="sans-serif" font-size="14" fill="#94a3b8" text-anchor="end">System Architecture
+        v2.0</text>
+
+    <!-- ================= ZONES ================= -->
+
+    <!-- Zone 1: Demand Side (Participants) -->
+    <rect x="50" y="100" width="1100" height="120" rx="10" fill="white" stroke="#94a3b8" stroke-width="2"
+        stroke-dasharray="5,5" />
+    <text x="70" y="130" font-family="sans-serif" font-size="16" fill="#64748b" font-weight="bold">需求与参与层 (Demand
+        Layer)</text>
+
+    <!-- Zone 2: The Factory Core (ARP Platform) -->
+    <rect x="50" y="260" width="700" height="340" rx="10" fill="white" stroke="#3b82f6" stroke-width="3" />
+    <text x="70" y="290" font-family="sans-serif" font-size="18" fill="#1e293b" font-weight="bold">ARP 智能关口核心 (The
+        Factory Core)</text>
+
+    <!-- Zone 3: Capability Providers (Supply Side) -->
+    <rect x="50" y="640" width="700" height="130" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2" />
+    <text x="70" y="670" font-family="sans-serif" font-size="16" fill="#64748b" font-weight="bold">能力供给池 (Capability
+        Pool)</text>
+
+    <!-- Zone 4: Asset Warehouse (Delivery) -->
+    <rect x="800" y="260" width="350" height="510" rx="10" fill="#f8fafc" stroke="#10b981" stroke-width="3" />
+    <text x="830" y="290" font-family="sans-serif" font-size="18" fill="#064e3b" font-weight="bold">国家数字资产库 (The
+        Warehouse)</text>
+
+    <!-- ================= NODES ================= -->
+
+    <!-- Actors (Top) -->
+    <g transform="translate(150, 150)">
+        <rect x="0" y="0" width="140" height="50" rx="5" fill="#e2e8f0" stroke="#64748b" />
+        <text x="70" y="30" text-anchor="middle" font-family="sans-serif" font-size="14">导演/创作者</text>
+        <text x="70" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#64748b">发布创意意图</text>
+    </g>
+    <g transform="translate(480, 150)">
+        <rect x="0" y="0" width="140" height="50" rx="5" fill="#e2e8f0" stroke="#64748b" />
+        <text x="70" y="30" text-anchor="middle" font-family="sans-serif" font-size="14">制片/监管方</text>
+        <text x="70" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#64748b">设定合规边界</text>
+    </g>
+    <g transform="translate(810, 150)">
+        <rect x="0" y="0" width="140" height="50" rx="5" fill="#e2e8f0" stroke="#64748b" />
+        <text x="70" y="30" text-anchor="middle" font-family="sans-serif" font-size="14">下游工作室</text>
+        <text x="70" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#64748b">接收工业资产</text>
+    </g>
+
+    <!-- ARP Internal Modules (Center) -->
+
+    <!-- 1. Identity Gate -->
+    <g transform="translate(100, 320)">
+        <rect x="0" y="0" width="180" height="60" rx="5" fill="url(#primary-grad)" />
+        <text x="90" y="25" text-anchor="middle" font-family="sans-serif" font-size="14" fill="white"
+            font-weight="bold">身份与路由总线</text>
+        <text x="90" y="45" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#bfdbfe">Identity
+            Injection</text>
+    </g>
+
+    <!-- 2. Workflow Orchestrator -->
+    <g transform="translate(100, 420)">
+        <rect x="0" y="0" width="400" height="140" rx="5" fill="#eff6ff" stroke="#3b82f6" stroke-dasharray="3,3" />
+        <text x="200" y="25" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#1e40af"
+            font-weight="bold">动态作业编排 (Workflow Orchestrator)</text>
+
+        <!-- Sub-steps -->
+        <rect x="20" y="50" width="100" height="40" rx="3" fill="white" stroke="#93c5fd" />
+        <text x="70" y="75" text-anchor="middle" font-size="12">参数解析</text>
+
+        <rect x="150" y="50" width="100" height="40" rx="3" fill="white" stroke="#93c5fd" />
+        <text x="200" y="75" text-anchor="middle" font-size="12">能力调用</text>
+
+        <rect x="280" y="50" width="100" height="40" rx="3" fill="white" stroke="#93c5fd" />
+        <text x="330" y="75" text-anchor="middle" font-size="12">工业治理</text>
+
+        <!-- Lines between sub-steps -->
+        <line x1="120" y1="70" x2="150" y2="70" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
+        <line x1="250" y1="70" x2="280" y2="70" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)" />
+    </g>
+
+    <!-- Agents (The Internal Actors) -->
+    <g transform="translate(580, 330)">
+        <circle cx="40" cy="40" r="40" fill="url(#agent-grad)" />
+        <text x="40" y="35" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white"
+            font-weight="bold">合规</text>
+        <text x="40" y="50" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white"
+            font-weight="bold">Agent</text>
+        <text x="40" y="95" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#d97706">规则哨兵</text>
+    </g>
+
+    <g transform="translate(580, 480)">
+        <circle cx="40" cy="40" r="40" fill="url(#agent-grad)" />
+        <text x="40" y="35" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white"
+            font-weight="bold">调度</text>
+        <text x="40" y="50" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white"
+            font-weight="bold">Agent</text>
+        <text x="40" y="95" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#d97706">算力管家</text>
+    </g>
+
+    <!-- Capability Units (Bottom) -->
+    <g transform="translate(50, 680)">
+        <!-- 1. Text / NLP -->
+        <rect x="0" y="0" width="120" height="60" rx="3" fill="#334155" />
+        <text x="60" y="25" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">DeepSeek V3</text>
+        <text x="60" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#94a3b8">Text /
+            Script</text>
+    </g>
+
+    <g transform="translate(180, 680)">
+        <!-- 2. Image Generation -->
+        <rect x="0" y="0" width="120" height="60" rx="3" fill="#334155" />
+        <text x="60" y="25" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">Midjourney /
+            FLUX</text>
+        <text x="60" y="45" text-anchor="middle" font-family="sans-serif" font-size="10"
+            fill="#94a3b8">Text-to-Image</text>
+    </g>
+
+    <g transform="translate(310, 680)">
+        <!-- 3. Video Generation -->
+        <rect x="0" y="0" width="120" height="60" rx="3" fill="#334155" />
+        <text x="60" y="25" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">Keling /
+            Sora</text>
+        <text x="60" y="45" text-anchor="middle" font-family="sans-serif" font-size="10"
+            fill="#94a3b8">Text-to-Video</text>
+    </g>
+
+    <g transform="translate(440, 680)">
+        <!-- 4. 3D Generation -->
+        <rect x="0" y="0" width="120" height="60" rx="3" fill="#334155" />
+        <text x="60" y="25" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">Trellis /
+            Tripo</text>
+        <text x="60" y="45" text-anchor="middle" font-family="sans-serif" font-size="10"
+            fill="#94a3b8">Image-to-3D</text>
+    </g>
+
+    <g transform="translate(570, 680)">
+        <!-- 5. Multimodal / Audio -->
+        <rect x="0" y="0" width="120" height="60" rx="3" fill="#334155" />
+        <text x="60" y="25" text-anchor="middle" font-family="sans-serif" font-size="12" fill="white">Doubao /
+            GPT-4o</text>
+        <text x="60" y="45" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#94a3b8">Multimodal
+            Inter.</text>
+    </g>
+
+    <!-- Zone 5: Domestic Compute Infrastructure (The Foundation) -->
+    <rect x="50" y="775" width="700" height="20" rx="0" fill="url(#header-grad)" fill-opacity="0.9" />
+    <text x="350" y="790" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#e2e8f0"
+        letter-spacing="2">
+        国产异构算力底座 (Compute Layer): Huawei Ascend 910B • Cambricon MLU • Moore Threads
+    </text>
+
+    <!-- Warehouse Output (Right) -->
+    <g transform="translate(850, 320)">
+        <path d="M0,0 h250 a10,10 0 0 1 10,10 v60 a10,10 0 0 1 -10,10 h-250 z" fill="#d1fae5" stroke="#10b981" />
+        <text x="20" y="30" font-family="sans-serif" font-size="14" fill="#064e3b" font-weight="bold">G2 级资产包</text>
+        <text x="20" y="50" font-family="sans-serif" font-size="11" fill="#059669">(.glb / .usd)</text>
+        <text x="20" y="65" font-family="sans-serif" font-size="11" fill="#059669">工业标准件</text>
+    </g>
+
+    <g transform="translate(850, 420)">
+        <path d="M0,0 h250 a10,10 0 0 1 10,10 v60 a10,10 0 0 1 -10,10 h-250 z" fill="#fef3c7" stroke="#d97706" />
+        <text x="20" y="30" font-family="sans-serif" font-size="14" fill="#92400e" font-weight="bold">MTS 溯源凭证</text>
+        <text x="20" y="50" font-family="sans-serif" font-size="11" fill="#b45309">(.json / .c2pa)</text>
+        <text x="20" y="65" font-family="sans-serif" font-size="11" fill="#b45309">含哈希指纹、授权链</text>
+    </g>
+
+    <g transform="translate(850, 520)">
+        <path d="M0,0 h250 a10,10 0 0 1 10,10 v60 a10,10 0 0 1 -10,10 h-250 z" fill="#e0e7ff" stroke="#4f46e5" />
+        <text x="20" y="30" font-family="sans-serif" font-size="14" fill="#312e81" font-weight="bold">使用授权书</text>
+        <text x="20" y="50" font-family="sans-serif" font-size="11" fill="#4338ca">Smart Contract</text>
+        <text x="20" y="65" font-family="sans-serif" font-size="11" fill="#4338ca">可交易权益</text>
+    </g>
+
+    <!-- ================= FLOWS ================= -->
+
+    <!-- Flow 1: Input to Identity -->
+    <path d="M 220 200 L 220 260 L 190 260 L 190 310" stroke="#64748b" stroke-width="2" fill="none"
+        marker-end="url(#arrow)" />
+
+    <!-- Flow 2: Identity to Orchestrator -->
+    <path d="M 190 380 L 190 420" stroke="#3b82f6" stroke-width="3" fill="none" marker-end="url(#arrow-blue)" />
+
+    <!-- Flow 3: Orchestrator to Capabilities (Down) -->
+    <path d="M 300 560 L 300 600 L 150 600 L 150 670" stroke="#3b82f6" stroke-width="2" fill="none"
+        stroke-dasharray="5,5" marker-end="url(#arrow-blue)" />
+    <path d="M 300 600 L 430 600 L 430 670" stroke="#3b82f6" stroke-width="2" fill="none" stroke-dasharray="5,5"
+        marker-end="url(#arrow-blue)" />
+    <path d="M 300 600 L 560 600 L 560 670" stroke="#3b82f6" stroke-width="2" fill="none" stroke-dasharray="5,5"
+        marker-end="url(#arrow-blue)" />
+
+    <!-- Flow 4: Capabilities Return (Up) -->
+    <path d="M 600 670 L 600 570 L 450 570 L 450 560" stroke="#10b981" stroke-width="2" fill="none"
+        marker-end="url(#arrow)" />
+
+    <!-- Flow 5: Agents Intervention -->
+    <path d="M 580 370 L 280 370 L 280 380" stroke="#d97706" stroke-width="2" stroke-dasharray="3,3" fill="none"
+        marker-end="url(#arrow)" />
+    <text x="430" y="365" font-family="sans-serif" font-size="10" fill="#d97706" text-anchor="middle">合规阻断</text>
+
+    <!-- Flow 6: Orchestrator to Warehouse (Out) -->
+    <path d="M 500 490 L 700 490 L 700 350 L 840 350" stroke="#10b981" stroke-width="3" fill="none"
+        marker-end="url(#arrow)" />
+    <text x="750" y="345" font-family="sans-serif" font-size="12" fill="#059669" text-anchor="middle">交付封装</text>
+
+    <path d="M 700 490 L 700 450 L 840 450" stroke="#d97706" stroke-width="2" fill="none" stroke-dasharray="3,3"
+        marker-end="url(#arrow)" />
+
+
+</svg>
