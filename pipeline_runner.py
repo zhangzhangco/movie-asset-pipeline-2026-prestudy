@@ -13,7 +13,7 @@ CONDA_ROOT = "/home/zhangxin/miniconda3"
 ENVS = {
     "sharp": f"{CONDA_ROOT}/envs/sharp/bin/python",
     "dust3r": f"{CONDA_ROOT}/envs/dust3r/bin/python",
-    "trellis": f"{CONDA_ROOT}/envs/trellis/bin/python",
+    "trellis": f"{CONDA_ROOT}/envs/trellis2/bin/python",
     # Meta SAM 3D Objects (see modules/sam-3d-objects/doc/setup.md)
     "sam3d_objects": f"{CONDA_ROOT}/envs/sam3d-objects/bin/python",
     "base": sys.executable,
