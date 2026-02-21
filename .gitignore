@@ -22,6 +22,10 @@ models/
 modules/
 # modules/sam-3d-objects/ # modules/ is now covered above
 
-# System
+# Experiments and large test assets
+experiments/
+assets/
+
+# Keep standard .gitignore contents below
 .DS_Store
 *.db
