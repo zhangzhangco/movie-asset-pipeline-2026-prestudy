@@ -61,12 +61,12 @@ def _validate_required_outputs(asset_type, asset_dir):
     if asset_type == "human":
         mesh_ok = any(
             os.path.exists(os.path.join(asset_dir, candidate))
-            for candidate in ("mesh.glb", "mesh.obj")
+            for candidate in ("mesh.glb", "mesh.obj", "splat.ply")
         )
         required = ["params.json", "preview.png"]
         missing = []
         if not mesh_ok:
-            missing.append("mesh.glb|mesh.obj")
+            missing.append("mesh.glb|mesh.obj|splat.ply")
         for rel_path in required:
             if not os.path.exists(os.path.join(asset_dir, rel_path)):
                 missing.append(rel_path)
@@ -76,14 +76,14 @@ def _validate_required_outputs(asset_type, asset_dir):
     if asset_type == "prop":
         mesh_ok = any(
             os.path.exists(os.path.join(asset_dir, candidate))
-            for candidate in ("mesh.glb", "splat.ply")
+            for candidate in ("mesh.glb", "mesh.obj", "splat.ply")
         )
         missing = []
         if not mesh_ok:
-            missing.append("mesh.glb|splat.ply")
+            missing.append("mesh.glb|mesh.obj|splat.ply")
         if not os.path.exists(os.path.join(asset_dir, "preview.png")):
             missing.append("preview.png")
-        outputs = _collect_existing(asset_dir, ["mesh.glb", "splat.ply", "preview.png"])
+        outputs = _collect_existing(asset_dir, ["mesh.glb", "mesh.obj", "splat.ply", "preview.png"])
         return len(missing) == 0, missing, outputs
 
     if asset_type == "scene":
@@ -98,6 +98,49 @@ def _validate_required_outputs(asset_type, asset_dir):
         return len(missing) == 0, missing, outputs
 
     return True, [], []
+
+
+def _select_primary_output(asset_dir):
+    for candidate in ("mesh.glb", "mesh.obj", "splat.ply"):
+        candidate_path = os.path.join(asset_dir, candidate)
+        if os.path.exists(candidate_path):
+            return candidate_path
+    return None
+
+
+def _parse_import_check_result(stdout_text):
+    lines = [line.strip() for line in (stdout_text or "").splitlines() if line.strip()]
+    for line in reversed(lines):
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict) and "import_ok" in payload:
+            return payload
+    return {"import_ok": False, "error": "invalid_or_missing_import_check_json"}
+
+
+def _run_glb_import_check(glb_path):
+    blender_cmd = shutil.which("blender")
+    if not blender_cmd:
+        return {"import_ok": False, "error": "blender_not_found"}
+
+    try:
+        completed = subprocess.run(
+            [blender_cmd, "-b", "-P", SCRIPTS["check_import"], "--", glb_path],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except Exception as exc:
+        return {"import_ok": False, "error": str(exc)}
+
+    result = _parse_import_check_result(completed.stdout)
+    result["returncode"] = completed.returncode
+    if completed.returncode != 0 and "error" not in result:
+        result["error"] = completed.stderr.strip()[:500] if completed.stderr else "blender_import_check_failed"
+    return result
 
 
 def select_asset_type_and_backend(signals, forced_asset_type, forced_backend):
@@ -386,21 +429,33 @@ def main():
                     )
                     continue
 
-                blender_cmd = shutil.which("blender")
-                if blender_cmd:
-                    print(f"   Testing DCC Compatibility for {asset_id}...")
-                    try:
-                        subprocess.run(
-                            [blender_cmd, "-b", "-P", SCRIPTS["check_import"], "--", splat_path],
-                            check=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE
-                        )
-                        print(f"   ✅ Import Validation Passed.")
-                    except subprocess.CalledProcessError as e:
-                        print(f"   ❌ Import Validation Failed: {e.stderr.decode('utf-8')[:200]}")
+            primary_output = _select_primary_output(unified_asset_dir)
+            import_check = {}
+            if primary_output and primary_output.endswith("mesh.glb"):
+                print(f"   Testing GLB Import Compatibility for {asset_id}...")
+                import_result = _run_glb_import_check(primary_output)
+                import_check = {
+                    "import_ok": bool(import_result.get("import_ok")),
+                    "stats": import_result.get("stats", {}),
+                }
+                if import_result.get("error"):
+                    import_check["error"] = import_result["error"]
+                if import_result.get("returncode") is not None:
+                    import_check["returncode"] = import_result["returncode"]
+                if import_check["import_ok"]:
+                    print("   ✅ Import Validation Passed.")
                 else:
-                    print(f"   ⚠️ Blender not found in PATH, skipping import validation.")
+                    print(f"   ❌ Import Validation Failed: {import_check.get('error', 'unknown_error')}")
+            else:
+                import_check = {
+                    "skipped": True,
+                    "reason": "glb_missing_degraded_to_ply",
+                }
+                if primary_output:
+                    import_check["selected_output"] = os.path.basename(primary_output)
+                print(f"   ⚠️ GLB missing; skipped Blender import check for {asset_id}.")
+
+            manifest.update_asset_fields(asset_id, {"import_check": import_check})
 
             manifest.record_asset_success(
                 asset_id=asset_id,
