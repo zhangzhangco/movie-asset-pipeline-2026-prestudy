@@ -22,10 +22,9 @@ def run_inference(image_path, output_dir, mask_path=None):
     time.sleep(2)
     
     # Expected Outputs
-    ply_name = os.path.splitext(os.path.basename(image_path))[0] + ".ply"
-    ply_path = os.path.join(output_dir, ply_name)
-    params_path = os.path.join(output_dir, "person_params.json")
-    preview_path = os.path.join(output_dir, "person_preview.png")
+    mesh_path = os.path.join(output_dir, "mesh.obj")
+    params_path = os.path.join(output_dir, "params.json")
+    preview_path = os.path.join(output_dir, "preview.png")
     
     # ---------------------------------------------------------
     # TODO: Replace with actual SAM 3D Body (MHR) model call
@@ -43,20 +42,15 @@ def run_inference(image_path, output_dir, mask_path=None):
     with open(params_path, 'w', encoding='utf-8') as f:
         json.dump(mock_params, f, indent=4)
         
-    # Placeholder for PLY
-    ply_content = """ply
-format ascii 1.0
-element vertex 3
-property float x
-property float y
-property float z
-end_header
-0 0 0
-0 1 0
-1 1 0
+        # Placeholder mesh OBJ
+    obj_content = """o body_mesh
+v 0.0 0.0 0.0
+v 0.0 1.0 0.0
+v 1.0 1.0 0.0
+f 1 2 3
 """
-    with open(ply_path, 'w') as f:
-        f.write(ply_content)
+    with open(mesh_path, "w", encoding="utf-8") as f:
+        f.write(obj_content)
         
     # Copy the input image as preview
     if os.path.exists(image_path):

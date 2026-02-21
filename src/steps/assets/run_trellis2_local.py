@@ -13,10 +13,8 @@ if "ATTN_BACKEND" not in os.environ:
 # ----------------------------
 
 import torch
-import imageio
 from PIL import Image
 from trellis2.pipelines import Trellis2ImageTo3DPipeline
-from trellis2.utils import render_utils
 
 # Environment Guard
 try:
@@ -53,12 +51,16 @@ def run_trellis_local(image_path, output_dir, seed=1):
     
     stem = os.path.splitext(os.path.basename(image_path))[0]
     
-    # 1. Save 3D Gaussian (.ply)
-    ply_path = os.path.join(output_dir, f"{stem}.ply")
+    # 1. Save 3D Gaussian (.ply) using standardized filename
+    ply_path = os.path.join(output_dir, "splat.ply")
     print(f"Saving Gaussian Splat to {ply_path}")
     outputs['gaussian'][0].save_ply(ply_path)
+
+    # 2. Save preview image for manifest/report rendering
+    preview_path = os.path.join(output_dir, "preview.png")
+    image.convert("RGB").save(preview_path)
     
-    # 2. Save GLB (.glb) - Disabled due to utils3d incompatibility
+    # 3. Save GLB (.glb) - Disabled due to utils3d incompatibility
     # glb_path = os.path.join(output_dir, f"{stem}.glb")
     # print(f"Saving GLB to {glb_path}")
     # glb = postprocessing_utils.to_glb(
@@ -69,7 +71,7 @@ def run_trellis_local(image_path, output_dir, seed=1):
     # )
     # glb.export(glb_path)
     
-    # 3. Render Video (Optional but good for verification) - Disabled due to utils3d incompatibility
+    # 4. Render Video (Optional but good for verification) - Disabled due to utils3d incompatibility
     # video_path = os.path.join(output_dir, f"{stem}_gs.mp4")
     # print(f"Rendering video to {video_path}")
     # video = render_utils.render_video(outputs['gaussian'][0])['color']

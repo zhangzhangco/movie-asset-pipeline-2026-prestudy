@@ -40,6 +40,66 @@ def _signals_incomplete(signals, required_keys):
     return any(signals.get(key) is None for key in required_keys)
 
 
+def _write_error_log(asset_dir, message):
+    os.makedirs(asset_dir, exist_ok=True)
+    log_path = os.path.join(asset_dir, "error.log")
+    with open(log_path, "w", encoding="utf-8") as log_file:
+        log_file.write(message.strip() + "\n")
+    return log_path
+
+
+def _collect_existing(base_dir, rel_paths):
+    outputs = []
+    for rel_path in rel_paths:
+        abs_path = os.path.join(base_dir, rel_path)
+        if os.path.exists(abs_path):
+            outputs.append(abs_path)
+    return outputs
+
+
+def _validate_required_outputs(asset_type, asset_dir):
+    if asset_type == "human":
+        mesh_ok = any(
+            os.path.exists(os.path.join(asset_dir, candidate))
+            for candidate in ("mesh.glb", "mesh.obj")
+        )
+        required = ["params.json", "preview.png"]
+        missing = []
+        if not mesh_ok:
+            missing.append("mesh.glb|mesh.obj")
+        for rel_path in required:
+            if not os.path.exists(os.path.join(asset_dir, rel_path)):
+                missing.append(rel_path)
+        outputs = _collect_existing(asset_dir, ["mesh.glb", "mesh.obj", "params.json", "preview.png", "splat.ply"])
+        return len(missing) == 0, missing, outputs
+
+    if asset_type == "prop":
+        mesh_ok = any(
+            os.path.exists(os.path.join(asset_dir, candidate))
+            for candidate in ("mesh.glb", "splat.ply")
+        )
+        missing = []
+        if not mesh_ok:
+            missing.append("mesh.glb|splat.ply")
+        if not os.path.exists(os.path.join(asset_dir, "preview.png")):
+            missing.append("preview.png")
+        outputs = _collect_existing(asset_dir, ["mesh.glb", "splat.ply", "preview.png"])
+        return len(missing) == 0, missing, outputs
+
+    if asset_type == "scene":
+        required = [
+            "scene_visual/scene.ply",
+            "views/view_01.png",
+            "views/view_02.png",
+            "views/view_03.png",
+        ]
+        missing = [rel_path for rel_path in required if not os.path.exists(os.path.join(asset_dir, rel_path))]
+        outputs = _collect_existing(asset_dir, required)
+        return len(missing) == 0, missing, outputs
+
+    return True, [], []
+
+
 def select_asset_type_and_backend(signals, forced_asset_type, forced_backend):
     """Select asset type and backend with forced-route priority and rule-table fallback."""
     signals = signals or {}
@@ -84,6 +144,7 @@ def select_asset_type_and_backend(signals, forced_asset_type, forced_backend):
 
     return asset_type, backend_selected, signals_incomplete
 
+
 def main():
     parser = argparse.ArgumentParser(description="Movie Asset Hybrid Pipeline Orchestrator")
     parser.add_argument("--input", required=True, help="Path to input image")
@@ -114,7 +175,7 @@ def main():
     session_id = os.path.splitext(os.path.basename(input_path))[0]
     output_dir = os.path.join(args.output_root, session_id)
     os.makedirs(output_dir, exist_ok=True)
-    
+
     # 0. Initialize Global Manifest & Step Runner
     runner = StepRunner(SCRIPTS)
     manifest = ManifestManager(
@@ -123,21 +184,21 @@ def main():
         input_path=input_path,
         sys_argv=sys.argv
     )
-            
+
     print(f"🎬 Starting Pipeline for Asset: {session_id}")
     print(f"📂 Output Directory: {output_dir}")
 
     # 1. Scene Gen
     if not args.skip_scene:
-        runner.run("Scene Generation (ml-sharp)", "scene_gen", 
+        runner.run("Scene Generation (ml-sharp)", "scene_gen",
                    ["--input-path", input_path, "--output-path", os.path.join(output_dir, "scene_visual")],
-                   ENVS["sharp"], 
+                   ENVS["sharp"],
                    extra_env={"PYTHONPATH": "modules/ml-sharp/src"})
     else:
         print("⏭️ Skipping Scene Generation")
 
     # 2. Geometry
-    if not args.skip_geometry and not args.skip_scene: # Added condition based on CLI arg semantics
+    if not args.skip_geometry and not args.skip_scene:  # Added condition based on CLI arg semantics
         runner.run("Geometry Reconstruction (DUSt3R)", "geometry",
                    ["--input", input_path, "--output", os.path.join(output_dir, "dust3r")],
                    ENVS["dust3r"],
@@ -149,7 +210,7 @@ def main():
     scene_visual_dir = os.path.join(output_dir, "scene_visual")
     potential_plys = glob.glob(os.path.join(scene_visual_dir, "**", "*.ply"), recursive=True)
     potential_ply = potential_plys[0] if potential_plys else None
-    
+
     lighting_json = os.path.join(output_dir, "lighting_probe.json")
     if potential_ply:
         runner.run("Lighting Estimation", "lighting",
@@ -158,7 +219,29 @@ def main():
     else:
         print(f"⚠️ No scene PLY found for lighting, using default.")
         with open(lighting_json, 'w') as f:
-            json.dump({"ambient_light": {"r":1.0, "g":1.0, "b":1.0}}, f)
+            json.dump({"ambient_light": {"r": 1.0, "g": 1.0, "b": 1.0}}, f)
+
+    # Scene required-file validation (recorded as dedicated manifest asset)
+    scene_asset_dir = output_dir
+    manifest.record_asset_start(
+        asset_id="scene_001",
+        asset_type="scene",
+        backend_selected="ml-sharp",
+        signals={},
+        parameters_snapshot={"skip_scene": args.skip_scene},
+    )
+    scene_ok, scene_missing, scene_outputs = _validate_required_outputs("scene", scene_asset_dir)
+    if scene_ok:
+        manifest.record_asset_success("scene_001", outputs=scene_outputs, run_log_paths=[])
+    else:
+        scene_log = _write_error_log(scene_asset_dir, f"Missing required scene outputs: {', '.join(scene_missing)}")
+        manifest.record_asset_failure(
+            asset_id="scene_001",
+            error_type="OutputValidationError",
+            message=f"Missing required scene outputs: {', '.join(scene_missing)}",
+            log_path=scene_log,
+            outputs=scene_outputs,
+        )
 
     # 4. Harvesting
     harvest_args = [
@@ -176,26 +259,34 @@ def main():
     # 5. Iterating Asset Manifest and Routing
     prop_dir = os.path.join(output_dir, "props")
     harvest_manifest_path = os.path.join(prop_dir, "harvest_manifest.json")
-    
+
+    asset_counters = {"prop": 0, "human": 0}
+
     if os.path.exists(harvest_manifest_path):
         with open(harvest_manifest_path, 'r') as f:
             harvest_manifest = json.load(f)
-            
+
         print(f"🧩 Found {len(harvest_manifest)} props in manifest.")
-        
+
         for item in harvest_manifest:
             asset_id = item['id']
-            relit_file = item['path'] # Absolute path from harvester
+            relit_file = item['path']  # Absolute path from harvester
             signals = item.get('signals', {})
-            
+
             asset_type, backend_selected, signals_incomplete = select_asset_type_and_backend(
                 signals=signals,
                 forced_asset_type=args.asset_type,
                 forced_backend=args.asset_gen_backend,
             )
-                    
+            if asset_type not in {"prop", "human"}:
+                asset_type = "prop"
+
+            asset_counters[asset_type] += 1
+            unified_asset_dir = os.path.join(output_dir, "assets", f"{asset_type}_{asset_counters[asset_type]:03d}")
+            os.makedirs(unified_asset_dir, exist_ok=True)
+
             print(f"   Processing Asset ID: {asset_id} | Type: {asset_type} | Backend: {backend_selected}")
-            
+
             parameters_snapshot = {
                 "asset_gen_backend": args.asset_gen_backend,
                 "asset_type": args.asset_type,
@@ -205,6 +296,7 @@ def main():
                 "disable_skin_rejection": args.disable_skin_rejection,
                 "source_image": relit_file,
                 "signals_incomplete": args.asset_type == "prop" and signals_incomplete,
+                "asset_output_dir": unified_asset_dir,
             }
             manifest.record_asset_start(
                 asset_id=asset_id,
@@ -213,16 +305,15 @@ def main():
                 signals=signals,
                 parameters_snapshot=parameters_snapshot,
             )
-            
+
             # Run 3D Gen backend
-            props_3d_dir = os.path.join(output_dir, "props_3d")
             success = False
             try:
                 if backend_selected == "trellis2":
                     success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "trellis2",
-                        ["--input", relit_file, "--output", props_3d_dir],
+                        ["--input", relit_file, "--output", unified_asset_dir],
                         ENVS["trellis2"],
                         extra_env={"PYTHONPATH": "modules/TRELLIS.2", "ATTN_BACKEND": "naive"},
                     )
@@ -230,7 +321,7 @@ def main():
                     success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "sam3d_objects",
-                        ["--input", relit_file, "--output", props_3d_dir],
+                        ["--input", relit_file, "--output", unified_asset_dir],
                         ENVS["sam3d_objects"],
                         extra_env={"PYTHONPATH": "modules/sam-3d-objects"},
                     )
@@ -238,7 +329,7 @@ def main():
                     success = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "sam3d_body",
-                        ["--image", relit_file, "--output_dir", props_3d_dir],
+                        ["--image", relit_file, "--output_dir", unified_asset_dir],
                         ENVS["base"]
                     )
                 else:
@@ -246,38 +337,61 @@ def main():
             except Exception as e:
                 print(f"❌ Exception in backend {backend_selected}: {e}")
 
+            outputs = [relit_file]
             if not success:
+                error_log = _write_error_log(unified_asset_dir, f"{backend_selected} failed to run for asset {asset_id}")
+                outputs.extend(_collect_existing(unified_asset_dir, ["mesh.glb", "mesh.obj", "splat.ply", "preview.png", "params.json"]))
                 manifest.record_asset_failure(
                     asset_id=asset_id,
                     error_type="BackendExecutionError",
                     message=f"{backend_selected} failed to run",
-                    log_path=None,
-                    outputs=[relit_file],
+                    log_path=error_log,
+                    outputs=outputs,
                 )
                 continue
-                
-            # Run Export
-            ply_name = os.path.splitext(os.path.basename(relit_file))[0] + ".ply"
-            ply_path = os.path.join(props_3d_dir, ply_name)
-            
-            run_log_paths = []
-            outputs = [relit_file]
-            if os.path.exists(ply_path):
-                outputs.append(ply_path)
 
+            # Validate required files immediately after backend completion
+            valid, missing, generated_outputs = _validate_required_outputs(asset_type, unified_asset_dir)
+            outputs.extend(generated_outputs)
+            if not valid:
+                error_log = _write_error_log(
+                    unified_asset_dir,
+                    f"Asset validation failed for {asset_id}. Missing: {', '.join(missing)}",
+                )
+                manifest.record_asset_failure(
+                    asset_id=asset_id,
+                    error_type="OutputValidationError",
+                    message=f"Missing required outputs: {', '.join(missing)}",
+                    log_path=error_log,
+                    outputs=outputs,
+                )
+                continue
+
+            # Optional packaging for splat/ply based outputs
+            splat_path = os.path.join(unified_asset_dir, "splat.ply")
+            if os.path.exists(splat_path):
                 pkg_success = runner.run(
                     f"Standardization ({asset_id})", "package",
-                    ["--input", ply_path, "--id", asset_id],
+                    ["--input", splat_path, "--id", asset_id],
                     ENVS["base"]
                 )
+                if not pkg_success:
+                    error_log = _write_error_log(unified_asset_dir, "Standardization failed")
+                    manifest.record_asset_failure(
+                        asset_id=asset_id,
+                        error_type="PackagingError",
+                        message="Standardization failed",
+                        log_path=error_log,
+                        outputs=outputs,
+                    )
+                    continue
 
-                # Check Import (Blender Headless)
                 blender_cmd = shutil.which("blender")
                 if blender_cmd:
                     print(f"   Testing DCC Compatibility for {asset_id}...")
                     try:
                         subprocess.run(
-                            [blender_cmd, "-b", "-P", SCRIPTS["check_import"], "--", ply_path],
+                            [blender_cmd, "-b", "-P", SCRIPTS["check_import"], "--", splat_path],
                             check=True,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE
@@ -288,38 +402,14 @@ def main():
                 else:
                     print(f"   ⚠️ Blender not found in PATH, skipping import validation.")
 
-                if pkg_success:
-                    manifest.record_asset_success(
-                        asset_id=asset_id,
-                        outputs=outputs,
-                        run_log_paths=run_log_paths,
-                    )
-                else:
-                    manifest.record_asset_failure(
-                        asset_id=asset_id,
-                        error_type="PackagingError",
-                        message="Standardization failed",
-                        log_path=None,
-                        outputs=outputs,
-                    )
-            else:
-                if backend_selected != "sam3d_body":
-                    manifest.record_asset_failure(
-                        asset_id=asset_id,
-                        error_type="OutputMissingError",
-                        message=f"Expected 3D model not found at {ply_path}",
-                        log_path=None,
-                        outputs=outputs,
-                    )
-                else:
-                    manifest.record_asset_success(
-                        asset_id=asset_id,
-                        outputs=outputs,
-                        run_log_paths=run_log_paths,
-                    )
+            manifest.record_asset_success(
+                asset_id=asset_id,
+                outputs=outputs,
+                run_log_paths=[],
+            )
     else:
         print("❌ No harvest manifest found. Skipping Generation.")
-        
+
     # 6. Report
     manifest.save()
     runner.run(
@@ -327,8 +417,9 @@ def main():
         ["--output_root", output_dir, "--input_image", input_path],
         ENVS["base"]
     )
-             
+
     print(f"\n🔗 Report available at: {os.path.join(output_dir, 'report.html')}")
+
 
 if __name__ == "__main__":
     main()

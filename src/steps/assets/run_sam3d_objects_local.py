@@ -125,8 +125,6 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     input_path = Path(args.input)
-    stem = input_path.stem
-
     rgb, mask = _load_rgba_and_mask(str(input_path))
 
     print(f"Loading SAM3D Objects pipeline from: {config_path}")
@@ -136,12 +134,15 @@ def main():
     output = inference(rgb, mask, seed=args.seed)
 
     # Export gaussian splat
-    ply_path = out_dir / f"{stem}.ply"
+    ply_path = out_dir / "splat.ply"
     if "gs" not in output:
         raise RuntimeError(f"Unexpected output keys: {list(output.keys())}")
 
     print(f"Saving Gaussian Splat to {ply_path}")
     output["gs"].save_ply(str(ply_path))
+
+    preview_path = out_dir / "preview.png"
+    Image.open(input_path).convert("RGB").save(preview_path)
 
     print("Done!")
 
