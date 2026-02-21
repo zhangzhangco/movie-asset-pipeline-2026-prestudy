@@ -16,11 +16,11 @@ import torch
 import imageio
 from PIL import Image
 from trellis2.pipelines import Trellis2ImageTo3DPipeline
-from trellis2.utils import render_utils, postprocessing_utils
+from trellis2.utils import render_utils
 
 # Environment Guard
 try:
-    import spconv
+    import flex_gemm
 except ImportError:
     print("❌ ERROR: Please run this script in the 'trellis2' conda environment.")
     print("   Run: conda activate trellis2")

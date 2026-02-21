@@ -183,7 +183,7 @@ def main():
                         "trellis",
                         ["--input", relit_file, "--output", props_3d_dir],
                         ENVS["trellis"],
-                        extra_env={"PYTHONPATH": "modules/TRELLIS", "ATTN_BACKEND": "naive"},
+                        extra_env={"PYTHONPATH": "modules/TRELLIS.2", "ATTN_BACKEND": "naive"},
                     )
                 elif backend == "sam3d_objects":
                     success = runner.run(
