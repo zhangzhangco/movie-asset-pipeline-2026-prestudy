@@ -56,6 +56,22 @@ def _collect_existing(base_dir, rel_paths):
             outputs.append(abs_path)
     return outputs
 
+def _load_failure_metadata(asset_dir):
+    failure_path = os.path.join(asset_dir, "failure.json")
+    if not os.path.exists(failure_path):
+        return None, None
+
+    try:
+        with open(failure_path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return failure_path, None
+
+    log_path = payload.get("log_path")
+    if log_path and not os.path.isabs(log_path):
+        log_path = os.path.join(asset_dir, log_path)
+    return failure_path, log_path
+
 
 def _collect_run_log_paths(run_result):
     if run_result is None:
@@ -412,8 +428,11 @@ def main():
 
             outputs = [relit_file]
             if not success:
-                error_log = _write_error_log(unified_asset_dir, f"{backend_selected} failed to run for asset {asset_id}")
-                outputs.extend(_collect_existing(unified_asset_dir, ["mesh.glb", "mesh.obj", "splat.ply", "preview.png", "params.json"]))
+                failure_json, failure_log = _load_failure_metadata(unified_asset_dir)
+                if failure_json:
+                    outputs.append(failure_json)
+                outputs.extend(_collect_existing(unified_asset_dir, ["mesh.glb", "mesh.obj", "splat.ply", "preview.png", "params.json", "failure.json"]))
+                error_log = failure_log or _write_error_log(unified_asset_dir, f"{backend_selected} failed to run for asset {asset_id}")
                 manifest.record_asset_failure(
                     asset_id=asset_id,
                     error_type="BackendExecutionError",
@@ -426,11 +445,27 @@ def main():
             # Validate required files immediately after backend completion
             valid, missing, generated_outputs = _validate_required_outputs(asset_type, unified_asset_dir)
             outputs.extend(generated_outputs)
+            if asset_type == "human" and not valid:
+                error_log = _write_error_log(
+                    unified_asset_dir,
+                    f"Human required deliverables validation failed for {asset_id}. Missing: {', '.join(missing)}",
+                )
+                outputs.extend(_collect_existing(unified_asset_dir, ["failure.json"]))
+                manifest.record_asset_failure(
+                    asset_id=asset_id,
+                    error_type="OutputValidationError",
+                    message=f"Human required deliverables missing: {', '.join(missing)}",
+                    log_path=error_log,
+                    outputs=outputs,
+                )
+                continue
+
             if not valid:
                 error_log = _write_error_log(
                     unified_asset_dir,
                     f"Asset validation failed for {asset_id}. Missing: {', '.join(missing)}",
                 )
+                outputs.extend(_collect_existing(unified_asset_dir, ["failure.json"]))
                 manifest.record_asset_failure(
                     asset_id=asset_id,
                     error_type="OutputValidationError",
