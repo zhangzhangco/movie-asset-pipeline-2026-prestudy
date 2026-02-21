@@ -3,6 +3,66 @@ import subprocess
 import time
 import json
 import sys
+import hashlib
+import platform
+from configparser import ConfigParser
+from importlib import metadata
+
+
+def _compute_sha256(file_path):
+    if not file_path or not os.path.exists(file_path) or not os.path.isfile(file_path):
+        return None
+
+    hasher = hashlib.sha256()
+    with open(file_path, "rb") as file_obj:
+        for chunk in iter(lambda: file_obj.read(8192), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def _get_git_commit():
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except Exception:
+        return None
+
+
+def _get_package_version(package_name="movie_asset_3dgs"):
+    try:
+        return metadata.version(package_name)
+    except Exception:
+        pass
+
+    setup_cfg_path = os.path.join(os.path.dirname(__file__), "..", "..", "setup.cfg")
+    setup_cfg_path = os.path.abspath(setup_cfg_path)
+    if not os.path.exists(setup_cfg_path):
+        return "unknown"
+
+    parser = ConfigParser()
+    parser.read(setup_cfg_path)
+    return parser.get("metadata", "version", fallback="unknown")
+
+
+def _get_runtime_info():
+    runtime = {
+        "python": platform.python_version(),
+        "torch": "not_installed",
+        "cuda": "not_available",
+    }
+    try:
+        import torch
+
+        runtime["torch"] = getattr(torch, "__version__", "unknown")
+        cuda_version = getattr(torch.version, "cuda", None)
+        if cuda_version:
+            runtime["cuda"] = cuda_version
+    except Exception:
+        pass
+    return runtime
 
 class StepRunner:
     """Helper class for orchestrating external scripts across different conda environments."""
@@ -51,15 +111,27 @@ class ManifestManager:
     """Manages reading, writing, and structuring the global JSON manifest."""
     
     def __init__(self, path, session_id, input_path, sys_argv, version="1.3.1"):
+        input_files = [input_path]
+        sha256_map = {
+            file_path: digest
+            for file_path in input_files
+            if (digest := _compute_sha256(file_path)) is not None
+        }
+
+        pipeline_commit = _get_git_commit() or _get_package_version()
         self.path = path
         self.data = {
             "session_id": session_id,
             "inputs": {
-                "image": input_path
+                "files": input_files,
+                "sha256_map": sha256_map,
             },
-            "meta": {
-                "pipeline_version": version,
-                "command": " ".join(sys_argv)
+            "versions": {
+                "pipeline_commit": pipeline_commit,
+                "runtime": _get_runtime_info(),
+            },
+            "reproduce": {
+                "command": " ".join(sys_argv),
             },
             "assets": []
         }
@@ -68,6 +140,57 @@ class ManifestManager:
     def add_asset(self, asset_record):
         """Append an asset record to the manifest."""
         self.data["assets"].append(asset_record)
+        self.save()
+
+    def _find_asset(self, asset_id):
+        for asset in self.data["assets"]:
+            if asset.get("asset_id") == asset_id:
+                return asset
+        return None
+
+    def record_asset_start(self, asset_id, asset_type, backend_selected, signals, parameters_snapshot):
+        asset_record = {
+            "asset_id": asset_id,
+            "asset_type": asset_type,
+            "backend_selected": backend_selected,
+            "status": "processing",
+            "signals": signals or {},
+            "parameters_snapshot": parameters_snapshot or {},
+            "outputs": [],
+            "error": None,
+            "run_log_paths": [],
+        }
+        existing = self._find_asset(asset_id)
+        if existing is None:
+            self.data["assets"].append(asset_record)
+        else:
+            existing.update(asset_record)
+        self.save()
+
+    def record_asset_success(self, asset_id, outputs, run_log_paths):
+        asset = self._find_asset(asset_id)
+        if asset is None:
+            raise KeyError(f"Asset '{asset_id}' not found when marking success.")
+
+        asset["status"] = "success"
+        asset["outputs"] = outputs or []
+        asset["error"] = None
+        asset["run_log_paths"] = run_log_paths or []
+        self.save()
+
+    def record_asset_failure(self, asset_id, error_type, message, log_path, outputs=[]):
+        asset = self._find_asset(asset_id)
+        if asset is None:
+            raise KeyError(f"Asset '{asset_id}' not found when marking failure.")
+
+        asset["status"] = "failed"
+        asset["outputs"] = outputs or []
+        asset["error"] = {
+            "type": error_type,
+            "message": message,
+            "log_path": log_path,
+        }
+        asset["run_log_paths"] = [log_path] if log_path else []
         self.save()
         
     def get_assets(self):
