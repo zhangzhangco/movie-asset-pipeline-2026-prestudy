@@ -57,6 +57,17 @@ def _collect_existing(base_dir, rel_paths):
     return outputs
 
 
+def _collect_run_log_paths(run_result):
+    if run_result is None:
+        return []
+    paths = []
+    if run_result.stdout_log:
+        paths.append(run_result.stdout_log)
+    if run_result.stderr_log:
+        paths.append(run_result.stderr_log)
+    return paths
+
+
 def _validate_required_outputs(asset_type, asset_dir):
     if asset_type == "human":
         mesh_ok = any(
@@ -175,6 +186,7 @@ def main():
     session_id = os.path.splitext(os.path.basename(input_path))[0]
     output_dir = os.path.join(args.output_root, session_id)
     os.makedirs(output_dir, exist_ok=True)
+    logs_root = os.path.join(output_dir, "logs")
 
     # 0. Initialize Global Manifest & Step Runner
     runner = StepRunner(SCRIPTS)
@@ -189,20 +201,29 @@ def main():
     print(f"📂 Output Directory: {output_dir}")
 
     # 1. Scene Gen
+    scene_run_logs = []
     if not args.skip_scene:
-        runner.run("Scene Generation (ml-sharp)", "scene_gen",
-                   ["--input-path", input_path, "--output-path", os.path.join(output_dir, "scene_visual")],
-                   ENVS["sharp"],
-                   extra_env={"PYTHONPATH": "modules/ml-sharp/src"})
+        scene_result = runner.run("Scene Generation (ml-sharp)", "scene_gen",
+                                  ["--input-path", input_path, "--output-path", os.path.join(output_dir, "scene_visual")],
+                                  ENVS["sharp"],
+                                  extra_env={"PYTHONPATH": "modules/ml-sharp/src"},
+                                  log_dir=logs_root,
+                                  step_id="scene_gen",
+                                  asset_id="scene_001")
+        scene_run_logs.extend(_collect_run_log_paths(scene_result))
     else:
         print("⏭️ Skipping Scene Generation")
 
     # 2. Geometry
     if not args.skip_geometry and not args.skip_scene:  # Added condition based on CLI arg semantics
-        runner.run("Geometry Reconstruction (DUSt3R)", "geometry",
-                   ["--input", input_path, "--output", os.path.join(output_dir, "dust3r")],
-                   ENVS["dust3r"],
-                   extra_env={"PYTHONPATH": "modules/dust3r"})
+        geometry_result = runner.run("Geometry Reconstruction (DUSt3R)", "geometry",
+                                     ["--input", input_path, "--output", os.path.join(output_dir, "dust3r")],
+                                     ENVS["dust3r"],
+                                     extra_env={"PYTHONPATH": "modules/dust3r"},
+                                     log_dir=logs_root,
+                                     step_id="geometry",
+                                     asset_id="scene_001")
+        scene_run_logs.extend(_collect_run_log_paths(geometry_result))
     else:
         print("⏭️ Skipping Geometry")
 
@@ -213,9 +234,13 @@ def main():
 
     lighting_json = os.path.join(output_dir, "lighting_probe.json")
     if potential_ply:
-        runner.run("Lighting Estimation", "lighting",
-                   ["--input", potential_ply, "--output", lighting_json],
-                   ENVS["base"])
+        lighting_result = runner.run("Lighting Estimation", "lighting",
+                                     ["--input", potential_ply, "--output", lighting_json],
+                                     ENVS["base"],
+                                     log_dir=logs_root,
+                                     step_id="lighting",
+                                     asset_id="scene_001")
+        scene_run_logs.extend(_collect_run_log_paths(lighting_result))
     else:
         print(f"⚠️ No scene PLY found for lighting, using default.")
         with open(lighting_json, 'w') as f:
@@ -228,11 +253,27 @@ def main():
         asset_type="scene",
         backend_selected="ml-sharp",
         signals={},
-        parameters_snapshot={"skip_scene": args.skip_scene},
+        parameters_snapshot={
+            "cli": {
+                "skip_scene": args.skip_scene,
+                "skip_geometry": args.skip_geometry,
+                "asset_gen_backend": args.asset_gen_backend,
+                "asset_type": args.asset_type,
+                "roi_hint": args.roi_hint,
+                "disable_skin_rejection": args.disable_skin_rejection,
+            },
+            "backend": {
+                "scene_gen": {"env": "sharp"},
+                "geometry": {"env": "dust3r"},
+                "lighting": {"env": "base"},
+            },
+            "model": {"tag": None, "seed": None},
+        },
     )
+    manifest.append_asset_run_logs("scene_001", scene_run_logs)
     scene_ok, scene_missing, scene_outputs = _validate_required_outputs("scene", scene_asset_dir)
     if scene_ok:
-        manifest.record_asset_success("scene_001", outputs=scene_outputs, run_log_paths=[])
+        manifest.record_asset_success("scene_001", outputs=scene_outputs, run_log_paths=scene_run_logs)
     else:
         scene_log = _write_error_log(scene_asset_dir, f"Missing required scene outputs: {', '.join(scene_missing)}")
         manifest.record_asset_failure(
@@ -254,7 +295,16 @@ def main():
     if args.disable_skin_rejection:
         harvest_args.append("--disable_skin_rejection")
 
-    runner.run("Asset Extraction & Relighting", "harvest", harvest_args, ENVS["base"])
+    harvest_result = runner.run(
+        "Asset Extraction & Relighting",
+        "harvest",
+        harvest_args,
+        ENVS["base"],
+        log_dir=logs_root,
+        step_id="harvest",
+        asset_id="scene_001",
+    )
+    manifest.append_asset_run_logs("scene_001", _collect_run_log_paths(harvest_result))
 
     # 5. Iterating Asset Manifest and Routing
     prop_dir = os.path.join(output_dir, "props")
@@ -288,15 +338,24 @@ def main():
             print(f"   Processing Asset ID: {asset_id} | Type: {asset_type} | Backend: {backend_selected}")
 
             parameters_snapshot = {
-                "asset_gen_backend": args.asset_gen_backend,
-                "asset_type": args.asset_type,
-                "skip_scene": args.skip_scene,
-                "skip_geometry": args.skip_geometry,
-                "roi_hint": args.roi_hint,
-                "disable_skin_rejection": args.disable_skin_rejection,
+                "cli": {
+                    "asset_gen_backend": args.asset_gen_backend,
+                    "asset_type": args.asset_type,
+                    "skip_scene": args.skip_scene,
+                    "skip_geometry": args.skip_geometry,
+                    "roi_hint": args.roi_hint,
+                    "disable_skin_rejection": args.disable_skin_rejection,
+                },
+                "backend": {
+                    "selected": backend_selected,
+                    "signals_incomplete": args.asset_type == "prop" and signals_incomplete,
+                    "asset_output_dir": unified_asset_dir,
+                },
+                "model": {
+                    "tag": "hf" if backend_selected == "sam3d_objects" else None,
+                    "seed": 1 if backend_selected == "trellis2" else (42 if backend_selected == "sam3d_objects" else None),
+                },
                 "source_image": relit_file,
-                "signals_incomplete": args.asset_type == "prop" and signals_incomplete,
-                "asset_output_dir": unified_asset_dir,
             }
             manifest.record_asset_start(
                 asset_id=asset_id,
@@ -308,32 +367,46 @@ def main():
 
             # Run 3D Gen backend
             success = False
+            run_log_paths = []
             try:
                 if backend_selected == "trellis2":
-                    success = runner.run(
+                    run_result = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "trellis2",
                         ["--input", relit_file, "--output", unified_asset_dir],
                         ENVS["trellis2"],
                         extra_env={"PYTHONPATH": "modules/TRELLIS.2", "ATTN_BACKEND": "naive"},
+                        log_dir=logs_root,
+                        step_id="asset_gen",
+                        asset_id=asset_id,
                     )
                 elif backend_selected == "sam3d_objects":
-                    success = runner.run(
+                    run_result = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "sam3d_objects",
                         ["--input", relit_file, "--output", unified_asset_dir],
                         ENVS["sam3d_objects"],
                         extra_env={"PYTHONPATH": "modules/sam-3d-objects"},
+                        log_dir=logs_root,
+                        step_id="asset_gen",
+                        asset_id=asset_id,
                     )
                 elif backend_selected == "sam3d_body":
-                    success = runner.run(
+                    run_result = runner.run(
                         f"Hero Asset Gen ({asset_id})",
                         "sam3d_body",
                         ["--image", relit_file, "--output_dir", unified_asset_dir],
-                        ENVS["base"]
+                        ENVS["base"],
+                        log_dir=logs_root,
+                        step_id="asset_gen",
+                        asset_id=asset_id,
                     )
                 else:
                     print(f"❌ Unknown asset_gen_backend: {backend_selected}")
+                    run_result = None
+                success = bool(run_result and run_result.success)
+                run_log_paths = _collect_run_log_paths(run_result)
+                manifest.append_asset_run_logs(asset_id, run_log_paths)
             except Exception as e:
                 print(f"❌ Exception in backend {backend_selected}: {e}")
 
@@ -373,9 +446,13 @@ def main():
                 pkg_success = runner.run(
                     f"Standardization ({asset_id})", "package",
                     ["--input", splat_path, "--id", asset_id],
-                    ENVS["base"]
+                    ENVS["base"],
+                    log_dir=logs_root,
+                    step_id="package",
+                    asset_id=asset_id,
                 )
-                if not pkg_success:
+                manifest.append_asset_run_logs(asset_id, _collect_run_log_paths(pkg_success))
+                if not pkg_success.success:
                     error_log = _write_error_log(unified_asset_dir, "Standardization failed")
                     manifest.record_asset_failure(
                         asset_id=asset_id,
@@ -405,18 +482,22 @@ def main():
             manifest.record_asset_success(
                 asset_id=asset_id,
                 outputs=outputs,
-                run_log_paths=[],
+                run_log_paths=manifest.get_asset_run_logs(asset_id),
             )
     else:
         print("❌ No harvest manifest found. Skipping Generation.")
 
     # 6. Report
     manifest.save()
-    runner.run(
+    report_result = runner.run(
         "Report Generation", "report",
         ["--output_root", output_dir, "--input_image", input_path],
-        ENVS["base"]
+        ENVS["base"],
+        log_dir=logs_root,
+        step_id="report",
+        asset_id="scene_001",
     )
+    manifest.append_asset_run_logs("scene_001", _collect_run_log_paths(report_result))
 
     print(f"\n🔗 Report available at: {os.path.join(output_dir, 'report.html')}")
 
