@@ -186,7 +186,6 @@ def main():
         for item in harvest_manifest:
             asset_id = item['id']
             relit_file = item['path'] # Absolute path from harvester
-            asset_name = os.path.basename(relit_file)
             signals = item.get('signals', {})
             
             asset_type, backend_selected, signals_incomplete = select_asset_type_and_backend(
@@ -197,20 +196,23 @@ def main():
                     
             print(f"   Processing Asset ID: {asset_id} | Type: {asset_type} | Backend: {backend_selected}")
             
-            # Record in global manifest
-            asset_record = {
-                "asset_id": asset_id,
-                "asset_type": asset_type,
-                "backend_selected": backend_selected,
-                "status": "processing",
-                "signals": signals,
-                "artifacts": {
-                    "source_image": relit_file
-                }
+            parameters_snapshot = {
+                "asset_gen_backend": args.asset_gen_backend,
+                "asset_type": args.asset_type,
+                "skip_scene": args.skip_scene,
+                "skip_geometry": args.skip_geometry,
+                "roi_hint": args.roi_hint,
+                "disable_skin_rejection": args.disable_skin_rejection,
+                "source_image": relit_file,
+                "signals_incomplete": args.asset_type == "prop" and signals_incomplete,
             }
-            if args.asset_type == "prop" and signals_incomplete:
-                asset_record["signals_incomplete"] = True
-            manifest.add_asset(asset_record)
+            manifest.record_asset_start(
+                asset_id=asset_id,
+                asset_type=asset_type,
+                backend_selected=backend_selected,
+                signals=signals,
+                parameters_snapshot=parameters_snapshot,
+            )
             
             # Run 3D Gen backend
             props_3d_dir = os.path.join(output_dir, "props_3d")
@@ -245,30 +247,30 @@ def main():
                 print(f"❌ Exception in backend {backend_selected}: {e}")
 
             if not success:
-                asset_record["status"] = "failed"
-                asset_record["error"] = {"type": "BackendExecutionError", "message": f"{backend_selected} failed to run"}
-                manifest.save()
+                manifest.record_asset_failure(
+                    asset_id=asset_id,
+                    error_type="BackendExecutionError",
+                    message=f"{backend_selected} failed to run",
+                    log_path=None,
+                    outputs=[relit_file],
+                )
                 continue
                 
             # Run Export
             ply_name = os.path.splitext(os.path.basename(relit_file))[0] + ".ply"
             ply_path = os.path.join(props_3d_dir, ply_name)
             
+            run_log_paths = []
+            outputs = [relit_file]
             if os.path.exists(ply_path):
-                asset_record["artifacts"]["raw_model"] = ply_path
-                
+                outputs.append(ply_path)
+
                 pkg_success = runner.run(
                     f"Standardization ({asset_id})", "package",
                     ["--input", ply_path, "--id", asset_id],
                     ENVS["base"]
                 )
-                         
-                if pkg_success:
-                    asset_record["status"] = "success"
-                else:
-                    asset_record["status"] = "failed"
-                    asset_record["error"] = {"type": "PackagingError", "message": "Standardization failed"}
-            
+
                 # Check Import (Blender Headless)
                 blender_cmd = shutil.which("blender")
                 if blender_cmd:
@@ -280,22 +282,41 @@ def main():
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE
                         )
-                        asset_record["import_valid"] = True
                         print(f"   ✅ Import Validation Passed.")
                     except subprocess.CalledProcessError as e:
-                        asset_record["import_valid"] = False
                         print(f"   ❌ Import Validation Failed: {e.stderr.decode('utf-8')[:200]}")
                 else:
                     print(f"   ⚠️ Blender not found in PATH, skipping import validation.")
-                    asset_record["import_valid"] = "N/A"
-            else:
-                 if backend_selected != "sam3d_body":
-                     asset_record["status"] = "failed"
-                     asset_record["error"] = {"type": "OutputMissingError", "message": f"Expected 3D model not found at {ply_path}"}
-                 else:
-                     asset_record["status"] = "success"
 
-            manifest.save()
+                if pkg_success:
+                    manifest.record_asset_success(
+                        asset_id=asset_id,
+                        outputs=outputs,
+                        run_log_paths=run_log_paths,
+                    )
+                else:
+                    manifest.record_asset_failure(
+                        asset_id=asset_id,
+                        error_type="PackagingError",
+                        message="Standardization failed",
+                        log_path=None,
+                        outputs=outputs,
+                    )
+            else:
+                if backend_selected != "sam3d_body":
+                    manifest.record_asset_failure(
+                        asset_id=asset_id,
+                        error_type="OutputMissingError",
+                        message=f"Expected 3D model not found at {ply_path}",
+                        log_path=None,
+                        outputs=outputs,
+                    )
+                else:
+                    manifest.record_asset_success(
+                        asset_id=asset_id,
+                        outputs=outputs,
+                        run_log_paths=run_log_paths,
+                    )
     else:
         print("❌ No harvest manifest found. Skipping Generation.")
         
