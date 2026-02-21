@@ -5,6 +5,7 @@ import json
 import sys
 import hashlib
 import platform
+from dataclasses import dataclass
 from configparser import ConfigParser
 from importlib import metadata
 
@@ -64,17 +65,26 @@ def _get_runtime_info():
         pass
     return runtime
 
+@dataclass
+class StepRunResult:
+    success: bool
+    returncode: int
+    stdout_log: str = None
+    stderr_log: str = None
+    duration_s: float = 0.0
+
+
 class StepRunner:
     """Helper class for orchestrating external scripts across different conda environments."""
-    
+
     def __init__(self, scripts_dict):
         self.scripts = scripts_dict
         
-    def run(self, name, script_key, args, env_python, extra_env=None):
+    def run(self, name, script_key, args, env_python, extra_env=None, log_dir=None, step_id=None, asset_id=None):
         script_path = self.scripts.get(script_key)
         if not script_path or not os.path.exists(script_path):
             print(f"⚠️ Script for '{name}' not found at {script_path}, skipping.")
-            return False
+            return StepRunResult(success=False, returncode=-1)
             
         print(f"\n========================================")
         print(f"🚀 PIPELINE STEP: {name}")
@@ -94,17 +104,53 @@ class StepRunner:
                     env[k] = v
         
         start_time = time.time()
+
+        stdout_log = None
+        stderr_log = None
+        stdout_stream = None
+        stderr_stream = None
+        if log_dir and step_id and asset_id:
+            asset_log_dir = os.path.join(log_dir, asset_id)
+            os.makedirs(asset_log_dir, exist_ok=True)
+            stdout_log = os.path.join(asset_log_dir, f"{step_id}.stdout.log")
+            stderr_log = os.path.join(asset_log_dir, f"{step_id}.stderr.log")
+            stdout_stream = open(stdout_log, "w", encoding="utf-8")
+            stderr_stream = open(stderr_log, "w", encoding="utf-8")
+
         try:
-            subprocess.check_call(full_cmd, env=env)
+            completed = subprocess.run(
+                full_cmd,
+                env=env,
+                stdout=stdout_stream,
+                stderr=stderr_stream,
+                check=False,
+            )
             elapsed = time.time() - start_time
-            print(f"✅ Step '{name}' completed in {elapsed:.2f}s")
-            return True
-        except subprocess.CalledProcessError as e:
-            print(f"❌ Step '{name}' failed with exit code {e.returncode}")
-            return False
+            if completed.returncode == 0:
+                print(f"✅ Step '{name}' completed in {elapsed:.2f}s")
+            else:
+                print(f"❌ Step '{name}' failed with exit code {completed.returncode}")
+            return StepRunResult(
+                success=completed.returncode == 0,
+                returncode=completed.returncode,
+                stdout_log=stdout_log,
+                stderr_log=stderr_log,
+                duration_s=elapsed,
+            )
         except Exception as e:
             print(f"❌ Step '{name}' failed: {e}")
-            return False
+            return StepRunResult(
+                success=False,
+                returncode=-1,
+                stdout_log=stdout_log,
+                stderr_log=stderr_log,
+                duration_s=time.time() - start_time,
+            )
+        finally:
+            if stdout_stream:
+                stdout_stream.close()
+            if stderr_stream:
+                stderr_stream.close()
 
 
 class ManifestManager:
@@ -178,6 +224,24 @@ class ManifestManager:
         asset["run_log_paths"] = run_log_paths or []
         self.save()
 
+    def append_asset_run_logs(self, asset_id, run_log_paths):
+        asset = self._find_asset(asset_id)
+        if asset is None:
+            raise KeyError(f"Asset '{asset_id}' not found when appending logs.")
+
+        existing = asset.get("run_log_paths") or []
+        for path in run_log_paths or []:
+            if path and path not in existing:
+                existing.append(path)
+        asset["run_log_paths"] = existing
+        self.save()
+
+    def get_asset_run_logs(self, asset_id):
+        asset = self._find_asset(asset_id)
+        if asset is None:
+            return []
+        return asset.get("run_log_paths") or []
+
     def record_asset_failure(self, asset_id, error_type, message, log_path, outputs=[]):
         asset = self._find_asset(asset_id)
         if asset is None:
@@ -190,7 +254,10 @@ class ManifestManager:
             "message": message,
             "log_path": log_path,
         }
-        asset["run_log_paths"] = [log_path] if log_path else []
+        existing = asset.get("run_log_paths") or []
+        if log_path and log_path not in existing:
+            existing.append(log_path)
+        asset["run_log_paths"] = existing
         self.save()
         
     def get_assets(self):
